@@ -126,14 +126,14 @@ for metric in METRICS:
 
 from datetime import datetime
 
-# Example values (replace later with your scripts)
-transact_date = "2026-03-08"
 system_date = datetime.now().strftime("%Y-%m-%d")
 
-# Calculate difference
+transact_raw = run_script("db_get_transact_date.sh")
+transact_date = datetime.strptime(transact_raw, "%Y%m%d").strftime("%Y-%m-%d")
+
 date_diff = (
-    datetime.strptime(system_date, "%Y-%m-%d")
-    - datetime.strptime(transact_date, "%Y-%m-%d")
+    datetime.strptime(system_date, "%Y-%m-%d") -
+    datetime.strptime(transact_date, "%Y-%m-%d")
 ).days
 
 if date_diff == 0:
