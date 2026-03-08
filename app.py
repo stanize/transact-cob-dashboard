@@ -149,5 +149,21 @@ status_bar = f"""
 """
 
 st.markdown(status_bar, unsafe_allow_html=True)
+st.markdown(
+"""
+---
+<center>
+
+⚡ **Transact COB Dashboard**
+
+Powered by **Streamlit • Python • Bash • Transact Automation**  
+Created by **Ignatius Stanislaus**
+
+</center>
+""",
+unsafe_allow_html=True
+)
+
 
 st.info("🛠️ If it works, it was planned. If it breaks, it's still under development. – Ignatius Stanislaus")
+
