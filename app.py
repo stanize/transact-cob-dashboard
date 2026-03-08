@@ -296,7 +296,8 @@ st.markdown(secondary_html, unsafe_allow_html=True)
 # COB Progress Display
 # ---------------------------------------------------------
 
-st.markdown("### COB Progress")
+st.markdown("---")
+st.subheader("COB Monitor")
 
 if cob_progress_error:
     st.error(f"Unable to load COB progress: {cob_progress_error}")
@@ -304,24 +305,110 @@ elif cob_progress_data and cob_progress_data.get("stages"):
     system_time = cob_progress_data.get("system_time", "N/A")
     cob_date = cob_progress_data.get("cob_date", "N/A")
     company_id = cob_progress_data.get("company_id", "N/A")
+    stages = cob_progress_data.get("stages", [])
 
-    st.markdown(
-        f"""
-<div style="
-    background:#0f172a;
-    border-radius:10px;
-    padding:14px 20px;
-    margin-bottom:15px;
-    color:white;
-    font-size:14px;
-">
-    <div><b>System Time:</b> {system_time}</div>
-    <div><b>COB Date:</b> {cob_date}</div>
-    <div><b>Running In:</b> {company_id}</div>
-</div>
-""",
-        unsafe_allow_html=True
-    )
+    # ---------------------------------------------------------
+    # Clean header info row
+    # ---------------------------------------------------------
+    info_col1, info_col2, info_col3 = st.columns(3)
+
+    with info_col1:
+        st.caption("System Time")
+        st.markdown(f"**{system_time}**")
+
+    with info_col2:
+        st.caption("COB Date")
+        st.markdown(f"**{cob_date}**")
+
+    with info_col3:
+        st.caption("Running In")
+        st.markdown(f"**{company_id}**")
+
+    st.markdown("")
+
+    # ---------------------------------------------------------
+    # Overall COB Progress
+    # ---------------------------------------------------------
+    total_processed = sum(int(row.get("processed", 0)) for row in stages)
+    total_jobs = sum(int(row.get("total", 0)) for row in stages)
+
+    if total_jobs > 0:
+        overall_pct = (total_processed / total_jobs) * 100
+    else:
+        overall_pct = 0
+
+    if overall_pct >= 100:
+        overall_color = "#22c55e"   # green
+    elif overall_pct >= 50:
+        overall_color = "#3b82f6"   # blue
+    elif overall_pct > 0:
+        overall_color = "#f59e0b"   # amber
+    else:
+        overall_color = "#64748b"   # grey
+
+    st.markdown("### Overall COB Progress")
+
+    overall_html = f"""
+    <div style="
+        background:#f8fafc;
+        border:1px solid #e2e8f0;
+        border-radius:12px;
+        padding:18px 20px;
+        margin-bottom:20px;
+    ">
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:10px;
+        ">
+            <div style="
+                font-size:18px;
+                font-weight:600;
+                color:#0f172a;
+            ">
+                COB Completion
+            </div>
+            <div style="
+                font-size:32px;
+                font-weight:800;
+                color:{overall_color};
+            ">
+                {overall_pct:.2f}%
+            </div>
+        </div>
+
+        <div style="
+            background:#e2e8f0;
+            border-radius:10px;
+            height:28px;
+            width:100%;
+            overflow:hidden;
+        ">
+            <div style="
+                background:{overall_color};
+                width:{min(overall_pct, 100)}%;
+                height:100%;
+                transition:width 0.5s ease-in-out;
+            "></div>
+        </div>
+
+        <div style="
+            margin-top:8px;
+            font-size:14px;
+            color:#475569;
+        ">
+            {total_processed} / {total_jobs} jobs completed
+        </div>
+    </div>
+    """
+
+    st.markdown(overall_html, unsafe_allow_html=True)
+
+    # ---------------------------------------------------------
+    # Stage Progress Table
+    # ---------------------------------------------------------
+    st.markdown("### COB Stages")
 
     header_cols = st.columns([2.2, 4, 1.2, 1.2, 1.2])
     header_cols[0].markdown("**Stage**")
@@ -330,7 +417,7 @@ elif cob_progress_data and cob_progress_data.get("stages"):
     header_cols[3].markdown("**Total**")
     header_cols[4].markdown("**% Completed**")
 
-    for row in cob_progress_data["stages"]:
+    for row in stages:
         stage = row.get("stage", "N/A")
         processed = row.get("processed", 0)
         total = row.get("total", 0)
@@ -365,9 +452,6 @@ elif cob_progress_data and cob_progress_data.get("stages"):
         cols[4].markdown(f"{pct:.2f}%")
 else:
     st.warning("No COB progress data available.")
-
-
-
 
 # ---------------------------------------------------------
 # Credits Section
