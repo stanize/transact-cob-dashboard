@@ -96,7 +96,7 @@ METRICS = [
     {
         "name": "License Expiry",
         "type": "text",
-        "script": "db_check_license_days_left.sh"
+        "script": "db_check_license_expiry.sh"
     }
 ]
 
