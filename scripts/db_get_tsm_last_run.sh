@@ -11,8 +11,7 @@ if [ -z "$record" ]; then
     exit 0
 fi
 
-# Extract datetime (remove milliseconds)
-datetime=$(echo "$record" | awk -F'_' '{print $1" "$2}' | sed 's/:..$//')
+datetime=$(echo "$record" | sed -E 's/^_*[0-9]+_([0-9]{2} [A-Z]{3} [0-9]{4})_([0-9]{2}:[0-9]{2}:[0-9]{2}):[0-9]{3}.*/\1 \2/')
 
 last_run=$(date -d "$datetime" +%s 2>/dev/null)
 
