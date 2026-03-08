@@ -33,10 +33,19 @@ def run_script(script_name, timeout=30):
         if result.returncode != 0:
             return "ERROR"
 
-        return result.stdout.strip()
+        output = result.stdout.strip()
+
+        if not output:
+            return "N/A"
+
+        return output
+
+    except subprocess.TimeoutExpired:
+        return "TIMEOUT"
 
     except Exception:
         return "ERROR"
+
 
 
 def get_status(script_name):
@@ -75,6 +84,11 @@ METRICS = [
         "script": "db_check_tsm_status.sh"
     },
     {
+        "name": "TSM Last Run",
+        "type": "text",
+        "script": "db_get_tsm_last_run.sh"
+    },    
+    {
         "name": "Concurrent Users",
         "type": "number",
         "script": "db_check_concurrent_users.sh"
@@ -85,8 +99,10 @@ METRICS = [
 def get_metric_value(metric):
     if metric["type"] == "status":
         return get_status(metric["script"])
-    return run_script(metric["script"])
-
+    elif metric["type"] in ["number", "text"]:
+        return run_script(metric["script"])
+    else:
+        return "N/A"
 
 metric_values = []
 
