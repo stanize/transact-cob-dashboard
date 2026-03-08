@@ -9,6 +9,40 @@ st.set_page_config(
     layout="wide"
 )
 
+st.markdown("""
+<style>
+
+.header-bar {
+background-color: #111827;
+padding: 14px;
+border-radius: 6px;
+margin-bottom: 20px;
+}
+
+.header-title {
+color: white;
+font-size: 28px;
+font-weight: 600;
+}
+
+.header-subtitle {
+color: #9ca3af;
+font-size: 14px;
+}
+
+</style>
+
+<div class="header-bar">
+<div class="header-title">⚡ Transact COB Dashboard</div>
+<div class="header-subtitle">
+Powered by Streamlit • Python • Bash | Built by Ignatius Stanislaus
+</div>
+</div>
+
+""", unsafe_allow_html=True)
+
+
+
 SCRIPTS_DIR = Path(__file__).parent / "scripts"
 
 # Refresh every 5 seconds
