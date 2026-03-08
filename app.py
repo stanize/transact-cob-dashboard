@@ -324,25 +324,6 @@ elif cob_progress_data and cob_progress_data.get("stages"):
     ]
 
     # ---------------------------------------------------------
-    # Clean header info row
-    # ---------------------------------------------------------
-    info_col1, info_col2, info_col3 = st.columns(3)
-
-    with info_col1:
-        st.caption("System Time")
-        st.markdown(f"**{system_time}**")
-
-    with info_col2:
-        st.caption("COB Date")
-        st.markdown(f"**{cob_date}**")
-
-    with info_col3:
-        st.caption("Running In")
-        st.markdown(f"**{company_id}**")
-
-    st.markdown("")
-
-    # ---------------------------------------------------------
     # Overall COB Progress
     # ---------------------------------------------------------
     cob_row = next(
@@ -371,8 +352,7 @@ elif cob_progress_data and cob_progress_data.get("stages"):
     else:
         overall_color = "#64748b"
     
-    st.markdown("### Overall COB Progress")
-    
+  
     box_col1, box_col2 = st.columns([4, 1])
     
     with box_col1:
@@ -396,7 +376,6 @@ elif cob_progress_data and cob_progress_data.get("stages"):
     # ---------------------------------------------------------
     # Stage Progress Table
     # ---------------------------------------------------------
-    st.markdown("### COB Stages")
 
     header_cols = st.columns([2.2, 4, 1.2, 1.2, 1.2])
     header_cols[0].markdown("**Stage**")
