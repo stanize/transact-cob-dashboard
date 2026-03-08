@@ -10,8 +10,6 @@ st.set_page_config(
 )
 
 SCRIPTS_DIR = Path(__file__).parent / "scripts"
-JBOSS_STATUS_SCRIPT = "db_check_jboss_status.sh"
-TSM_STATUS_SCRIPT = "db_check_jboss_status.sh"
 
 # Refresh every 5 seconds
 st_autorefresh(interval=5000, key="refresh")
@@ -40,23 +38,17 @@ def run_script(script_name, timeout=30):
         return "ERROR"
 
 
-def get_jboss_status():
-    output = run_script(JBOSS_STATUS_SCRIPT)
+def get_status(script_name):
+    output = run_script(script_name)
+
     if output in ["SCRIPT NOT FOUND", "ERROR"]:
         return output
+
     status = output.upper()
+
     if status in ["STOPPED", "LOADING", "RUNNING"]:
         return status
-    return "ERROR"
 
-
-def get_tsm_status():
-    output = run_script(TSM_STATUS_SCRIPT)
-    if output in ["SCRIPT NOT FOUND", "ERROR"]:
-        return output
-    status = output.upper()
-    if status in ["STOPPED", "LOADING", "RUNNING"]:
-        return status
     return "ERROR"
 
 
@@ -70,54 +62,89 @@ def get_color(status):
     }.get(status, "#6b7280")
 
 
-jboss_status = get_jboss_status()
-tsm_status = get_tsm_status()
+METRICS = [
+    {
+        "name": "JBoss",
+        "type": "status",
+        "script": "db_check_jboss_status.sh"
+    },
+    {
+        "name": "TSM",
+        "type": "status",
+        "script": "db_check_tsm_status.sh"
+    },
+    {
+        "name": "Concurrent Users",
+        "type": "number",
+        "script": "db_check_concurrent_users.sh"
+    }
+]
+
+
+def get_metric_value(metric):
+    if metric["type"] == "status":
+        return get_status(metric["script"])
+    return run_script(metric["script"])
+
+
+metric_values = []
+
+for metric in METRICS:
+    metric_values.append({
+        "name": metric["name"],
+        "type": metric["type"],
+        "script": metric["script"],
+        "value": get_metric_value(metric)
+    })
+
 
 st.title("💳 Transact COB Dashboard")
 st.caption("Temenos Transact COB Operations Dashboard")
 
+status_items = ""
+
+for metric in metric_values:
+    value = metric["value"]
+
+    if metric["type"] == "status":
+        status_items += f"""
+        <div>
+            <b>{metric['name']}</b>
+            <span style="
+                display:inline-block;
+                width:8px;
+                height:8px;
+                border-radius:50%;
+                background:{get_color(value)};
+                margin-left:6px;
+                margin-right:6px;
+            "></span>
+            {value}
+        </div>
+        """
+    else:
+        status_items += f"""
+        <div>
+            <b>{metric['name']}</b>
+            <span style="margin-left:6px;">{value}</span>
+        </div>
+        """
+
 status_bar = f"""
 <div style="
-background:#0f172a;
-border-radius:10px;
-padding:12px 20px;
-margin-top:10px;
-margin-bottom:20px;
-display:flex;
-justify-content:flex-start;
-gap:40px;
-color:white;
-font-size:14px;
+    background:#0f172a;
+    border-radius:10px;
+    padding:12px 20px;
+    margin-top:10px;
+    margin-bottom:20px;
+    display:flex;
+    justify-content:flex-start;
+    gap:40px;
+    color:white;
+    font-size:14px;
+    flex-wrap:wrap;
 ">
-
-<div>
-<b>JBoss</b>
-<span style="
-display:inline-block;
-width:8px;
-height:8px;
-border-radius:50%;
-background:{get_color(jboss_status)};
-margin-left:6px;
-margin-right:6px;
-"></span>
-{jboss_status}
-</div>
-
-<div>
-<b>TSM</b>
-<span style="
-display:inline-block;
-width:8px;
-height:8px;
-border-radius:50%;
-background:{get_color(tsm_status)};
-margin-left:6px;
-margin-right:6px;
-"></span>
-{tsm_status}
-</div>
-
+    {status_items}
 </div>
 """
 
