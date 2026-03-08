@@ -11,6 +11,15 @@ st.set_page_config(
     layout="wide"
 )
 
+st.markdown("""
+<style>
+div[data-testid="stProgress"] > div > div > div > div {
+    background-color: #3b82f6;
+}
+</style>
+""", unsafe_allow_html=True)
+
+
 
 SCRIPTS_DIR = Path(__file__).parent / "scripts"
 
@@ -361,32 +370,29 @@ elif cob_progress_data and cob_progress_data.get("stages"):
         overall_color = "#f59e0b"
     else:
         overall_color = "#64748b"
-
+    
     st.markdown("### Overall COB Progress")
-
-    overall_html = textwrap.dedent(f"""
-    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:18px 20px; margin-bottom:20px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <div style="font-size:18px; font-weight:600; color:#0f172a;">
-                COB Completion
-            </div>
-            <div style="font-size:32px; font-weight:800; color:{overall_color};">
+    
+    box_col1, box_col2 = st.columns([4, 1])
+    
+    with box_col1:
+        st.markdown("**COB Completion**")
+    
+    with box_col2:
+        st.markdown(
+            f"""
+            <div style="text-align:right; font-size:32px; font-weight:800; color:{overall_color};">
                 {overall_pct:.2f}%
             </div>
-        </div>
+            """,
+            unsafe_allow_html=True
+        )
     
-        <div style="background:#e2e8f0; border-radius:10px; height:28px; width:100%; overflow:hidden;">
-            <div style="background:{overall_color}; width:{min(overall_pct, 100)}%; height:100%; transition:width 0.5s ease-in-out;"></div>
-        </div>
+    st.progress(overall_pct / 100 if total_jobs else 0)
     
-        <div style="margin-top:8px; font-size:14px; color:#475569;">
-            {total_processed} / {total_jobs} jobs completed
-        </div>
-    </div>
-    """).strip()
+    st.caption(f"{total_processed} / {total_jobs} jobs completed")
 
-    st.markdown(overall_html, unsafe_allow_html=True)
-
+    
     # ---------------------------------------------------------
     # Stage Progress Table
     # ---------------------------------------------------------
