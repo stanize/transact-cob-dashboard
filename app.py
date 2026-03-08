@@ -129,19 +129,26 @@ from datetime import datetime
 system_date = datetime.now().strftime("%Y-%m-%d")
 
 transact_raw = run_script("db_get_transact_date.sh")
-transact_date = datetime.strptime(transact_raw, "%Y%m%d").strftime("%Y-%m-%d")
 
-date_diff = (
-    datetime.strptime(system_date, "%Y-%m-%d") -
-    datetime.strptime(transact_date, "%Y-%m-%d")
-).days
+try:
+    transact_date = datetime.strptime(transact_raw, "%Y%m%d").strftime("%Y-%m-%d")
+    date_diff = (
+        datetime.strptime(system_date, "%Y-%m-%d") -
+        datetime.strptime(transact_date, "%Y-%m-%d")
+    ).days
 
-if date_diff == 0:
-    diff_text = "IN SYNC"
-    diff_color = "#00ff9c"
-else:
-    diff_text = f"{date_diff} day(s)"
+    if date_diff == 0:
+        diff_text = "IN SYNC"
+        diff_color = "#00ff9c"
+    else:
+        diff_text = f"{date_diff} day(s)"
+        diff_color = "#ff5c5c"
+
+except ValueError:
+    transact_date = f"INVALID ({transact_raw})"
+    diff_text = "ERROR"
     diff_color = "#ff5c5c"
+
 
 secondary_metrics = [
     {"label": "Transact Date", "value": transact_date, "color": "#00ff9c"},
@@ -209,7 +216,7 @@ st.markdown(status_bar, unsafe_allow_html=True)
 
 # st.markdown("---")
 
-secondary_html = """
+secondary_html = f"""
 <div style="
 display:flex;
 justify-content:space-between;
@@ -220,17 +227,17 @@ font-size:18px;
 
 <div>
 <b>Transact Date</b><br>
-2026-03-08
+{transact_date}
 </div>
 
 <div>
 <b>System Date</b><br>
-2026-03-08
+{system_date}
 </div>
 
 <div>
 <b>Difference</b><br>
-<span style="color:#00c853;">IN SYNC</span>
+<span style="color:{diff_color};">{diff_text}</span>
 </div>
 
 </div>
