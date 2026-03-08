@@ -10,6 +10,8 @@ st.set_page_config(
 )
 
 SCRIPTS_DIR = Path(__file__).parent / "scripts"
+JBOSS_STATUS_SCRIPT = "db_check_jboss_status.sh"
+TSM_STATUS_SCRIPT = "db_check_jboss_status.sh"
 
 # Refresh every 5 seconds
 st_autorefresh(interval=5000, key="refresh")
@@ -39,16 +41,22 @@ def run_script(script_name, timeout=30):
 
 
 def get_jboss_status():
-    output = run_script("db_check_jboss_status.sh")
-
+    output = run_script(JBOSS_STATUS_SCRIPT)
     if output in ["SCRIPT NOT FOUND", "ERROR"]:
         return output
-
     status = output.upper()
-
     if status in ["STOPPED", "LOADING", "RUNNING"]:
         return status
+    return "ERROR"
 
+
+def get_tsm_status
+    output = run_script(TSM_STATUS_SCRIPT)
+    if output in ["SCRIPT NOT FOUND", "ERROR"]:
+        return output
+    status = output.upper()
+    if status in ["STOPPED", "LOADING", "RUNNING"]:
+        return status
     return "ERROR"
 
 
@@ -63,6 +71,7 @@ def get_color(status):
 
 
 jboss_status = get_jboss_status()
+tsm_status = get_tsm_status()
 
 st.title("💳 Transact COB Dashboard")
 st.caption("Temenos Transact COB Operations Dashboard")
@@ -92,6 +101,20 @@ margin-left:6px;
 margin-right:6px;
 "></span>
 {jboss_status}
+</div>
+
+<div>
+<b>TSM</b>
+<span style="
+display:inline-block;
+width:8px;
+height:8px;
+border-radius:50%;
+background:{get_color(tsm_status)};
+margin-left:6px;
+margin-right:6px;
+"></span>
+{tsm_status}
 </div>
 
 </div>
