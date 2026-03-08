@@ -307,6 +307,12 @@ elif cob_progress_data and cob_progress_data.get("stages"):
     company_id = cob_progress_data.get("company_id", "N/A")
     stages = cob_progress_data.get("stages", [])
 
+    # Remove COB from lower table, because it is shown separately above
+    stage_rows = [
+        row for row in stages
+        if row.get("stage", "").strip().upper() != "COB"
+    ]
+
     # ---------------------------------------------------------
     # Clean header info row
     # ---------------------------------------------------------
@@ -329,22 +335,31 @@ elif cob_progress_data and cob_progress_data.get("stages"):
     # ---------------------------------------------------------
     # Overall COB Progress
     # ---------------------------------------------------------
-    total_processed = sum(int(row.get("processed", 0)) for row in stages)
-    total_jobs = sum(int(row.get("total", 0)) for row in stages)
-
+    cob_row = next(
+        (row for row in stages if row.get("stage", "").strip().upper() == "COB"),
+        None
+    )
+    
+    if cob_row:
+        total_processed = int(cob_row.get("processed", 0))
+        total_jobs = int(cob_row.get("total", 0))
+    else:
+        total_processed = sum(int(row.get("processed", 0)) for row in stage_rows)
+        total_jobs = sum(int(row.get("total", 0)) for row in stage_rows)
+        
     if total_jobs > 0:
         overall_pct = (total_processed / total_jobs) * 100
     else:
         overall_pct = 0
 
     if overall_pct >= 100:
-        overall_color = "#22c55e"   # green
+        overall_color = "#22c55e"
     elif overall_pct >= 50:
-        overall_color = "#3b82f6"   # blue
+        overall_color = "#3b82f6"
     elif overall_pct > 0:
-        overall_color = "#f59e0b"   # amber
+        overall_color = "#f59e0b"
     else:
-        overall_color = "#64748b"   # grey
+        overall_color = "#64748b"
 
     st.markdown("### Overall COB Progress")
 
@@ -417,7 +432,7 @@ elif cob_progress_data and cob_progress_data.get("stages"):
     header_cols[3].markdown("**Total**")
     header_cols[4].markdown("**% Completed**")
 
-    for row in stages:
+    for row in stage_rows:
         stage = row.get("stage", "N/A")
         processed = row.get("processed", 0)
         total = row.get("total", 0)
@@ -452,6 +467,7 @@ elif cob_progress_data and cob_progress_data.get("stages"):
         cols[4].markdown(f"{pct:.2f}%")
 else:
     st.warning("No COB progress data available.")
+
 
 # ---------------------------------------------------------
 # Credits Section
