@@ -120,6 +120,36 @@ for metric in METRICS:
     })
 
 
+# ---------------------------------------------------------
+# Secondary Metrics (Date Synchronization Section)
+# ---------------------------------------------------------
+
+from datetime import datetime
+
+# Example values (replace later with your scripts)
+transact_date = "2026-03-08"
+system_date = datetime.now().strftime("%Y-%m-%d")
+
+# Calculate difference
+date_diff = (
+    datetime.strptime(system_date, "%Y-%m-%d")
+    - datetime.strptime(transact_date, "%Y-%m-%d")
+).days
+
+if date_diff == 0:
+    diff_text = "IN SYNC"
+    diff_color = "#00ff9c"
+else:
+    diff_text = f"{date_diff} day(s)"
+    diff_color = "#ff5c5c"
+
+secondary_metrics = [
+    {"label": "Transact Date", "value": transact_date, "color": "#00ff9c"},
+    {"label": "System Date", "value": system_date, "color": "#00ff9c"},
+    {"label": "Difference", "value": diff_text, "color": diff_color},
+]
+
+
 st.title("💳 Transact COB Dashboard")
 st.caption("Temenos Transact COB Operations Dashboard")
 
@@ -171,6 +201,24 @@ status_bar = f"""
 """
 
 st.markdown(status_bar, unsafe_allow_html=True)
+
+
+# ---------------------------------------------------------
+# Secondary Metrics Display
+# ---------------------------------------------------------
+
+st.markdown("---")
+
+cols = st.columns(len(secondary_metrics))
+
+for col, metric in zip(cols, secondary_metrics):
+    with col:
+        st.metric(
+            label=metric["label"],
+            value=metric["value"]
+        )
+
+
 st.markdown(
 """
 ---
