@@ -150,4 +150,4 @@ status_bar = f"""
 
 st.markdown(status_bar, unsafe_allow_html=True)
 
-st.info("JBoss status is checked using scripts/db_check_jboss_status.sh")
+st.info("🛠️ If it works, it was planned. If it breaks, it's still under development. – Ignatius Stanislaus")
