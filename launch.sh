@@ -10,7 +10,8 @@ echo "--------------------------------------"
 cd "$DASHBOARD_DIR" || exit 1
 
 echo "Pulling latest version from GitHub..."
-git pull
+git fetch origin
+git reset --hard origin/main
 
 echo "Starting Streamlit dashboard..."
 streamlit run app.py --server.port 8800
