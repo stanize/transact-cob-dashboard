@@ -1,5 +1,6 @@
 import streamlit as st
 import subprocess
+import json
 from pathlib import Path
 from streamlit_autorefresh import st_autorefresh
 
@@ -120,6 +121,45 @@ for metric in METRICS:
     })
 
 
+def get_cob_progress():
+    script_path = SCRIPTS_DIR / "db_get_cob_progress_json.sh"
+
+    if not script_path.exists():
+        return None, "SCRIPT NOT FOUND"
+
+    try:
+        result = subprocess.run(
+            ["bash", str(script_path)],
+            capture_output=True,
+            text=True,
+            timeout=30
+        )
+
+        if result.returncode != 0:
+            return None, "ERROR"
+
+        output = result.stdout.strip()
+
+        if not output:
+            return None, "N/A"
+
+        return json.loads(output), None
+
+    except subprocess.TimeoutExpired:
+        return None, "TIMEOUT"
+
+    except Exception:
+        return None, "ERROR"
+
+
+def get_progress_color(pct):
+    if pct >= 100:
+        return "#22c55e"
+    elif pct > 0:
+        return "#facc15"
+    return "#334155"
+
+
 # ---------------------------------------------------------
 # Secondary Metrics (Date Synchronization Section)
 # ---------------------------------------------------------
@@ -155,6 +195,8 @@ secondary_metrics = [
     {"label": "System Date", "value": system_date, "color": "#00ff9c"},
     {"label": "Difference", "value": diff_text, "color": diff_color},
 ]
+
+cob_progress_data, cob_progress_error = get_cob_progress()
 
 
 st.title("💳 Transact COB Dashboard")
@@ -245,6 +287,84 @@ font-size:18px;
 
 st.markdown(secondary_html, unsafe_allow_html=True)
 
+
+# --------------------------------------------------------
+# COB Progress
+# --------------------------------------------------------
+
+# ---------------------------------------------------------
+# COB Progress Display
+# ---------------------------------------------------------
+
+st.markdown("### COB Progress")
+
+if cob_progress_error:
+    st.error(f"Unable to load COB progress: {cob_progress_error}")
+elif cob_progress_data and cob_progress_data.get("stages"):
+    system_time = cob_progress_data.get("system_time", "N/A")
+    cob_date = cob_progress_data.get("cob_date", "N/A")
+    company_id = cob_progress_data.get("company_id", "N/A")
+
+    st.markdown(
+        f"""
+<div style="
+    background:#0f172a;
+    border-radius:10px;
+    padding:14px 20px;
+    margin-bottom:15px;
+    color:white;
+    font-size:14px;
+">
+    <div><b>System Time:</b> {system_time}</div>
+    <div><b>COB Date:</b> {cob_date}</div>
+    <div><b>Running In:</b> {company_id}</div>
+</div>
+""",
+        unsafe_allow_html=True
+    )
+
+    header_cols = st.columns([2.2, 4, 1.2, 1.2, 1.2])
+    header_cols[0].markdown("**Stage**")
+    header_cols[1].markdown("**Progress**")
+    header_cols[2].markdown("**Processed**")
+    header_cols[3].markdown("**Total**")
+    header_cols[4].markdown("**% Completed**")
+
+    for row in cob_progress_data["stages"]:
+        stage = row.get("stage", "N/A")
+        processed = row.get("processed", 0)
+        total = row.get("total", 0)
+        pct = float(row.get("pct_completed", 0))
+
+        cols = st.columns([2.2, 4, 1.2, 1.2, 1.2])
+
+        cols[0].markdown(f"**{stage}**")
+
+        progress_color = get_progress_color(pct)
+        progress_html = f"""
+        <div style="
+            background:#1e293b;
+            border-radius:8px;
+            height:20px;
+            width:100%;
+            overflow:hidden;
+            border:1px solid #334155;
+        ">
+            <div style="
+                background:{progress_color};
+                width:{min(pct, 100)}%;
+                height:100%;
+                transition:width 0.5s ease-in-out;
+            "></div>
+        </div>
+        """
+        cols[1].markdown(progress_html, unsafe_allow_html=True)
+
+        cols[2].markdown(str(processed))
+        cols[3].markdown(str(total))
+        cols[4].markdown(f"{pct:.2f}%")
+else:
+    st.warning("No COB progress data available.")
 
 
 
