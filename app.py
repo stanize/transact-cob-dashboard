@@ -50,7 +50,7 @@ def get_jboss_status():
     return "ERROR"
 
 
-def get_tsm_status
+def get_tsm_status():
     output = run_script(TSM_STATUS_SCRIPT)
     if output in ["SCRIPT NOT FOUND", "ERROR"]:
         return output
