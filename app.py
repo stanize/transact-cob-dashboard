@@ -156,14 +156,14 @@ st.markdown(
 
 ⚡ **Transact COB Dashboard**
 
-Powered by **Streamlit • Python • Bash • Transact Automation**  
+Powered by **Streamlit • Python • Bash • Coffee • Mild Panic**  
 Created by **Ignatius Stanislaus**
 
+
+🛠️ If it works, it was planned. If it breaks, it's still under development.
 </center>
 """,
 unsafe_allow_html=True
 )
 
-
-st.info("🛠️ If it works, it was planned. If it breaks, it's still under development. – Ignatius Stanislaus")
 
