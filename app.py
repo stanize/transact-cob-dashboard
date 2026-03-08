@@ -207,7 +207,7 @@ st.markdown(status_bar, unsafe_allow_html=True)
 # Secondary Metrics Display
 # ---------------------------------------------------------
 
-st.markdown("---")
+# st.markdown("---")
 
 secondary_html = """
 <div style="
@@ -237,9 +237,6 @@ font-size:18px;
 """
 
 st.markdown(secondary_html, unsafe_allow_html=True)
-
-
-
 
 
 
