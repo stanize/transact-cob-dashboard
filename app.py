@@ -92,6 +92,11 @@ METRICS = [
         "name": "Concurrent Users",
         "type": "number",
         "script": "db_check_concurrent_users.sh"
+    },
+    {
+        "name": "License Expiry",
+        "type": "text",
+        "script": "db_check_license_days_left.sh"
     }
 ]
 
