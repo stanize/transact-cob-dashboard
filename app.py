@@ -84,7 +84,8 @@ padding:12px 20px;
 margin-top:10px;
 margin-bottom:20px;
 display:flex;
-justify-content:space-between;
+justify-content:flex-start;
+gap:40px;
 color:white;
 font-size:14px;
 ">
