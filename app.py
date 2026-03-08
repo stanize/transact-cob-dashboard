@@ -209,15 +209,45 @@ st.markdown(status_bar, unsafe_allow_html=True)
 
 st.markdown("---")
 
-cols = st.columns(len(secondary_metrics))
+secondary_html = """
+<div style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:10px 20px;
+font-size:18px;
+">
 
-for col, metric in zip(cols, secondary_metrics):
-    with col:
-        st.metric(
-            label=metric["label"],
-            value=metric["value"]
-        )
+<div>
+<b>Transact Date</b><br>
+2026-03-08
+</div>
 
+<div>
+<b>System Date</b><br>
+2026-03-08
+</div>
+
+<div>
+<b>Difference</b><br>
+<span style="color:#00c853;">IN SYNC</span>
+</div>
+
+</div>
+"""
+
+st.markdown(secondary_html, unsafe_allow_html=True)
+
+
+
+
+
+
+
+
+# ---------------------------------------------------------
+# Credits Section
+# ---------------------------------------------------------
 
 st.markdown(
 """
