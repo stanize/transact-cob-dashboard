@@ -108,27 +108,27 @@ for metric in metric_values:
 
     if metric["type"] == "status":
         status_items += f"""
-        <div>
-            <b>{metric['name']}</b>
-            <span style="
-                display:inline-block;
-                width:8px;
-                height:8px;
-                border-radius:50%;
-                background:{get_color(value)};
-                margin-left:6px;
-                margin-right:6px;
-            "></span>
-            {value}
-        </div>
-        """
+<div>
+    <b>{metric['name']}</b>
+    <span style="
+        display:inline-block;
+        width:8px;
+        height:8px;
+        border-radius:50%;
+        background:{get_color(value)};
+        margin-left:6px;
+        margin-right:6px;
+    "></span>
+    {value}
+</div>
+"""
     else:
         status_items += f"""
-        <div>
-            <b>{metric['name']}</b>
-            <span style="margin-left:6px;">{value}</span>
-        </div>
-        """
+<div>
+    <b>{metric['name']}</b>
+    <span style="margin-left:6px;">{value}</span>
+</div>
+"""
 
 status_bar = f"""
 <div style="
