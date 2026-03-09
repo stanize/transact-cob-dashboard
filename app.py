@@ -40,6 +40,35 @@ st.markdown("""
 }
 
 
+/* ---------------------------------------------------------
+   JBoss Restart Button
+--------------------------------------------------------- */
+
+div.stButton > button {
+    background-color: #f97316;
+    color: white;
+    border-radius: 10px;
+    border: none;
+    height: 38px;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.15s ease;
+}
+
+div.stButton > button:hover {
+    background-color: #ea580c;
+}
+
+div.stButton > button:disabled {
+    background-color: #fed7aa;
+    color: #7c2d12;
+}
+
+div[data-testid="stCheckbox"] {
+    margin-top: 6px;
+    margin-bottom: 6px;
+}
+
 
 /* ---------------------------------------------------------
    SECONDARY METRICS
@@ -498,12 +527,20 @@ with top_left:
 
 with top_right:
     with st.container(border=True):
-        st.markdown("**JBoss Control**")
-        st.caption("Restart application server")
 
-        confirm_restart = st.checkbox("Confirm restart", key="confirm_jboss_restart")
+        c1, c2 = st.columns([1.3, 1])
 
-        if st.button("Restart JBoss", use_container_width=True, disabled=not confirm_restart):
+        with c1:
+            confirm_restart = st.checkbox("Confirm restart", key="confirm_jboss_restart")
+
+        with c2:
+            restart_clicked = st.button(
+                "Restart JBoss",
+                use_container_width=True,
+                disabled=not confirm_restart
+            )
+
+        if restart_clicked:
             with st.spinner("Restarting JBoss..."):
                 ok, message = restart_jboss()
 
@@ -511,7 +548,6 @@ with top_right:
                 st.success(message)
             else:
                 st.error(message)
-
 # ---------------------------------------------------------
 # Secondary Metrics Display
 # ---------------------------------------------------------
