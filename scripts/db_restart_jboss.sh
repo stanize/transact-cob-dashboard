@@ -1,22 +1,16 @@
 #!/bin/bash
 
-# Resolve the directory where this script lives
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-JBOSS_HOME=/opt/jboss-eap-7.4
 CHECK_SCRIPT="$SCRIPT_DIR/db_check_jboss_status.sh"
 
-echo "Stopping JBoss..."
+echo "Restarting JBoss service..."
 
-$JBOSS_HOME/bin/jboss-cli.sh --connect command=:shutdown
+if ! sudo systemctl restart jboss; then
+    echo "Failed to restart JBoss service"
+    exit 1
+fi
 
-sleep 5
-
-echo "Starting JBoss..."
-
-nohup $JBOSS_HOME/bin/standalone.sh > /tmp/jboss_start.log 2>&1 &
-
-echo "Waiting for deployments..."
+echo "Waiting for JBoss to become fully available..."
 
 for i in {1..60}
 do
