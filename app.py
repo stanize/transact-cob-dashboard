@@ -537,11 +537,11 @@ if len(st.session_state.tx_history) >= 2:
         avg_per_min = int(delta * 60 / elapsed)
 
         if avg_per_min > 0:
-            tx_rate_text = f"Avg: +{avg_per_min:,}/min"
+            tx_rate_text = f"+{avg_per_min:,}/min"
         elif avg_per_min == 0:
-            tx_rate_text = "Avg: 0/min"
+            tx_rate_text = "0/min"
         else:
-            tx_rate_text = f"Avg: {avg_per_min:,}/min"
+            tx_rate_text = f"{avg_per_min:,}/min"
 
 
 #-----------------------------
@@ -602,24 +602,26 @@ elif cob_progress_data and cob_progress_data.get("stages"):
             </div>
         </div>
         """, unsafe_allow_html=True)
-        
+            
     with tx_col:
         st.markdown(f"""
         <div class="cob-summary-card">
-            <div style="display:flex; justify-content:space-between; align-items:baseline; gap:12px;">
-                <div class="cob-big-pct" style="color:#0f172a; text-align:left; margin-bottom:0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                <div class="cob-big-pct" style="color:#0f172a; margin:0;">
                     {transactions_processed}
                 </div>
-                <span style="font-size:13px; font-weight:600; color:#64748b; white-space:nowrap;">
+    
+                <span style="font-size:12px; font-weight:600; color:#64748b; white-space:nowrap;">
                     {tx_rate_text}
                 </span>
             </div>
-            <div class="cob-summary-subtitle" style="margin-top:8px; margin-bottom:0; text-align:center;">
+    
+            <div class="cob-summary-subtitle" style="margin-top:6px; margin-bottom:0; text-align:center;">
                 Transactions processed
             </div>
         </div>
         """, unsafe_allow_html=True)
-    
+        
         
     with pct_col:
         st.markdown(f"""
