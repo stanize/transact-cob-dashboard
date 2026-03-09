@@ -498,7 +498,41 @@ st.markdown(secondary_bar, unsafe_allow_html=True)
 
 st.subheader("COB Monitor")
 
-transactions_processed = run_script("db_get_cob_transactions.sh")
+import time
+raw_tx = run_script("db_get_cob_transactions.sh")
+
+try:
+    current_tx = int(raw_tx)
+except:
+    current_tx = 0
+
+now_ts = time.time()
+
+if "prev_tx" not in st.session_state:
+    st.session_state.prev_tx = current_tx
+    st.session_state.prev_tx_ts = now_ts
+    tx_per_min = 0
+else:
+    elapsed = now_ts - st.session_state.prev_tx_ts
+    tx_delta = current_tx - st.session_state.prev_tx
+
+    if elapsed > 0:
+        tx_per_min = int(tx_delta * 60 / elapsed)
+    else:
+        tx_per_min = 0
+
+    st.session_state.prev_tx = current_tx
+    st.session_state.prev_tx_ts = now_ts
+
+transactions_processed = f"{current_tx:,}"
+
+if tx_per_min > 0:
+    tx_rate_text = f"+{tx_per_min:,}/min"
+elif tx_per_min == 0:
+    tx_rate_text = "No movement"
+else:
+    tx_rate_text = f"{tx_per_min:,}/min"
+
 
 if cob_progress_error:
     st.error(f"Unable to load COB progress: {cob_progress_error}")
@@ -559,6 +593,9 @@ elif cob_progress_data and cob_progress_data.get("stages"):
         <div class="cob-summary-card">
             <div class="cob-big-pct" style="color:#0f172a; text-align:center;">
                 {transactions_processed}
+            </div>
+            <div class="cob-summary-subtitle" style="text-align:center; margin-top:8px;">
+                {tx_rate_text}
             </div>
             <div class="cob-summary-subtitle" style="text-align:center; margin-bottom:0;">
                 Transactions processed
