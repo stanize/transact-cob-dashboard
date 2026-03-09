@@ -540,9 +540,18 @@ with top_right:
                 disabled=not confirm_restart
             )
 
-        if restart_clicked:
-            with st.spinner("Restarting JBoss..."):
-                ok, message = restart_jboss()
+    if restart_clicked:
+        with st.spinner("Restarting JBoss..."):
+    
+            start = time.time()
+    
+            ok, message = restart_jboss()
+    
+            elapsed = time.time() - start
+            min_duration = 25   # seconds
+    
+            if elapsed < min_duration:
+                time.sleep(min_duration - elapsed)
 
             if ok:
                 st.success(message)
