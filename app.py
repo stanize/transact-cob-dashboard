@@ -447,41 +447,35 @@ st.markdown(status_bar, unsafe_allow_html=True)
 # Secondary Metrics Display
 # ---------------------------------------------------------
 
-# st.markdown("---")
+secondary_items = f"""
+<div class="secondary-card">
+    <div class="secondary-label">Transact Date</div>
+    <div class="secondary-value">{transact_date}</div>
+</div>
 
-secondary_html = f"""
-<div class="secondary-metrics">
+<div class="secondary-card">
+    <div class="secondary-label">System Date</div>
+    <div class="secondary-value">{system_date}</div>
+</div>
 
-    <div class="secondary-card">
-        <div class="secondary-label">Transact Date</div>
-        <div class="secondary-value">{transact_date}</div>
-    </div>
-
-    <div class="secondary-card">
-        <div class="secondary-label">System Date</div>
-        <div class="secondary-value">{system_date}</div>
-    </div>
-
-    <div class="secondary-card">
-        <div class="secondary-label">Difference</div>
-        <div class="secondary-value" style="color:{diff_color};">{diff_text}</div>
-    </div>
-
+<div class="secondary-card">
+    <div class="secondary-label">Difference</div>
+    <div class="secondary-value" style="color:{diff_color};">{diff_text}</div>
 </div>
 """
 
-st.markdown(secondary_html, unsafe_allow_html=True)
+secondary_bar = f"""
+<div class="secondary-metrics">
+    {secondary_items}
+</div>
+"""
 
-
-# --------------------------------------------------------
-# COB Progress
-# --------------------------------------------------------
+st.markdown(secondary_bar, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
 # COB Progress Display
 # ---------------------------------------------------------
 
-st.markdown("---")
 st.subheader("COB Monitor")
 
 if cob_progress_error:
@@ -556,27 +550,6 @@ elif cob_progress_data and cob_progress_data.get("stages"):
         </div>
         """, unsafe_allow_html=True)    
 
-    
-    # ---------------------------------------------------------
-    # Context row
-    # ---------------------------------------------------------
-    context_html = f"""
-    <div class="secondary-metrics" style="margin-top:8px; margin-bottom:18px;">
-        <div class="secondary-card">
-            <div class="secondary-label">System Time</div>
-            <div class="secondary-value">{system_time}</div>
-        </div>
-        <div class="secondary-card">
-            <div class="secondary-label">COB Date</div>
-            <div class="secondary-value">{cob_date}</div>
-        </div>
-        <div class="secondary-card">
-            <div class="secondary-label">Company</div>
-            <div class="secondary-value" style="font-size:18px;">{company_id}</div>
-        </div>
-    </div>
-    """
-    st.markdown(context_html, unsafe_allow_html=True)
 
     # ---------------------------------------------------------
     # Stage table header
