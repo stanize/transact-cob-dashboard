@@ -3,27 +3,25 @@
 JBOSS_HOME="/mnt/temenos/3rdParty/AS/jboss-eap-7.4"
 DEPLOY_DIR="$JBOSS_HOME/standalone/deployments"
 
-# 1. Check if JBoss process is running
 JBOSS_PID=$(pgrep -f "jboss-modules")
 
 if [ -z "$JBOSS_PID" ]; then
     echo "STOPPED"
-    exit 1
+    exit 0
 fi
 
-# 2. Check deployment folder
-failed=$(ls $DEPLOY_DIR/*.failed 2>/dev/null | wc -l)
-deploying=$(ls $DEPLOY_DIR/*.isdeploying 2>/dev/null | wc -l)
-pending=$(ls $DEPLOY_DIR/*.dodeploy 2>/dev/null | wc -l)
+failed=$(find "$DEPLOY_DIR" -maxdepth 1 -name "*.failed" | wc -l)
+deploying=$(find "$DEPLOY_DIR" -maxdepth 1 -name "*.isdeploying" | wc -l)
+pending=$(find "$DEPLOY_DIR" -maxdepth 1 -name "*.dodeploy" | wc -l)
 
 if [ "$failed" -gt 0 ]; then
-    echo "LOADING"
-    exit 2
+    echo "ERROR"
+    exit 0
 fi
 
 if [ "$deploying" -gt 0 ] || [ "$pending" -gt 0 ]; then
     echo "LOADING"
-    exit 2
+    exit 0
 fi
 
 echo "RUNNING"
