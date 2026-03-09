@@ -602,25 +602,23 @@ elif cob_progress_data and cob_progress_data.get("stages"):
             </div>
         </div>
         """, unsafe_allow_html=True)
-            
+                
     with tx_col:
         st.markdown(f"""
-        <div class="cob-summary-card">
-            <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
-                <div class="cob-big-pct" style="color:#0f172a; margin:0;">
-                    {transactions_processed}
-                </div>
-    
-                <span style="font-size:12px; font-weight:600; color:#64748b; white-space:nowrap;">
-                    {tx_rate_text}
-                </span>
+    <div class="cob-summary-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+            <div class="cob-big-pct" style="color:#0f172a; margin:0;">
+                {transactions_processed}
             </div>
-    
-            <div class="cob-summary-subtitle" style="margin-top:6px; margin-bottom:0; text-align:center;">
-                Transactions processed
-            </div>
+            <span style="font-size:12px; font-weight:600; color:#64748b; white-space:nowrap;">
+                {tx_rate_text}
+            </span>
         </div>
-        """, unsafe_allow_html=True)
+        <div class="cob-summary-subtitle" style="margin-top:6px; margin-bottom:0; text-align:center;">
+            Transactions processed
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
         
         
     with pct_col:
