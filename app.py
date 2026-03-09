@@ -519,7 +519,7 @@ st.session_state.tx_history.append((now_ts, current_tx))
 # keep only roughly last 60 seconds
 st.session_state.tx_history = [
     item for item in st.session_state.tx_history
-    if now_ts - item[0] <= 60
+    if now_ts - item[0] <= 180
 ]
 
 transactions_processed = f"{current_tx:,}"
@@ -606,36 +606,21 @@ elif cob_progress_data and cob_progress_data.get("stages"):
     with tx_col:
         st.markdown(f"""
         <div class="cob-summary-card">
-            <div style="
-                display:flex;
-                justify-content:space-between;
-                align-items:baseline;
-                gap:12px;
-            ">
-                <div class="cob-big-pct" style="
-                    color:#0f172a;
-                    text-align:left;
-                    margin-bottom:0;
-                ">
+            <div style="display:flex; justify-content:space-between; align-items:baseline; gap:12px;">
+                <div class="cob-big-pct" style="color:#0f172a; text-align:left; margin-bottom:0;">
                     {transactions_processed}
                 </div>
-    
-                <div style="
-                    font-size:13px;
-                    font-weight:600;
-                    color:#64748b;
-                    white-space:nowrap;
-                ">
+                <span style="font-size:13px; font-weight:600; color:#64748b; white-space:nowrap;">
                     {tx_rate_text}
-                </div>
+                </span>
             </div>
-    
             <div class="cob-summary-subtitle" style="margin-top:8px; margin-bottom:0; text-align:center;">
                 Transactions processed
             </div>
         </div>
         """, unsafe_allow_html=True)
-            
+    
+        
     with pct_col:
         st.markdown(f"""
         <div class="cob-summary-card">
