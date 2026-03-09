@@ -1,7 +1,6 @@
 import streamlit as st
 import subprocess
 import json
-import textwrap
 from pathlib import Path
 from streamlit_autorefresh import st_autorefresh
 
@@ -207,6 +206,16 @@ st.markdown("""
     color: #b91c1c;
 }
 
+/* subtle dashboard background */
+.stApp {
+    background-color: #f3f4f6;
+}
+
+/* cleaner spacing between blocks */
+[data-testid="stVerticalBlock"] > div {
+    gap: 0.6rem;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -272,6 +281,18 @@ def get_color(status):
         "SCRIPT NOT FOUND": "#f97316"
     }.get(status, "#6b7280")
 
+
+def safe_int(value, default=0):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+def safe_float(value, default=0.0):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
 
 METRICS = [
     {
@@ -352,14 +373,13 @@ def get_cob_progress():
         return None, "ERROR"
 
 
-def get_stage_status(processed, total, pct):
+def get_stage_status(processed, total):
     if total > 0 and processed >= total:
         return "COMPLETED"
     elif processed > 0:
         return "RUNNING"
     else:
         return "PENDING"
-
 
 def get_status_pill_class(status):
     return {
@@ -482,9 +502,6 @@ if cob_progress_error:
     st.error(f"Unable to load COB progress: {cob_progress_error}")
 
 elif cob_progress_data and cob_progress_data.get("stages"):
-    system_time = cob_progress_data.get("system_time", "N/A")
-    cob_date = cob_progress_data.get("cob_date", "N/A")
-    company_id = cob_progress_data.get("company_id", "N/A")
     stages = cob_progress_data.get("stages", [])
 
     stage_rows = [
@@ -498,12 +515,12 @@ elif cob_progress_data and cob_progress_data.get("stages"):
     )
 
     if cob_row:
-        total_processed = int(cob_row.get("processed", 0))
-        total_jobs = int(cob_row.get("total", 0))
+        total_processed = safe_int(cob_row.get("processed", 0))
+        total_jobs = safe_int(cob_row.get("total", 0))
     else:
-        total_processed = sum(int(row.get("processed", 0)) for row in stage_rows)
-        total_jobs = sum(int(row.get("total", 0)) for row in stage_rows)
-
+        total_processed = sum(safe_int(row.get("processed", 0)) for row in stage_rows)
+        total_jobs = sum(safe_int(row.get("total", 0)) for row in stage_rows)
+        
     overall_pct = (total_processed / total_jobs) * 100 if total_jobs > 0 else 0
 
     if overall_pct >= 100:
@@ -564,24 +581,13 @@ elif cob_progress_data and cob_progress_data.get("stages"):
     # ---------------------------------------------------------
     # Stage rows
     # ---------------------------------------------------------
-    def safe_int(value, default=0):
-        try:
-            return int(value)
-        except (TypeError, ValueError):
-            return default
-    
-    def safe_float(value, default=0.0):
-        try:
-            return float(value)
-        except (TypeError, ValueError):
-            return default
 
     for row in stage_rows:
         stage = row.get("stage", "N/A")
         processed = safe_int(row.get("processed", 0))
         total = safe_int(row.get("total", 0))
         pct = safe_float(row.get("pct_completed", 0))
-        status = get_stage_status(processed, total, pct)
+        status = get_stage_status(processed, total)
         pill_class = get_status_pill_class(status)
 
         if status == "COMPLETED":
