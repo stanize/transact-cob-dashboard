@@ -39,6 +39,8 @@ st.markdown("""
     box-shadow: 0 4px 14px rgba(15, 23, 42, 0.18);
 }
 
+
+
 /* ---------------------------------------------------------
    SECONDARY METRICS
 --------------------------------------------------------- */
@@ -389,6 +391,35 @@ def get_status_pill_class(status):
         "FAILED": "status-failed"
     }.get(status, "status-pending")
 
+
+def restart_jboss():
+    script_path = SCRIPTS_DIR / "db_restart_jboss.sh"
+
+    if not script_path.exists():
+        return False, "SCRIPT NOT FOUND"
+
+    try:
+        result = subprocess.run(
+            ["bash", str(script_path)],
+            capture_output=True,
+            text=True,
+            timeout=300
+        )
+
+        if result.returncode != 0:
+            error_msg = result.stderr.strip() or result.stdout.strip() or "ERROR"
+            return False, error_msg
+
+        output = result.stdout.strip() or "JBoss restart completed."
+        return True, output
+
+    except subprocess.TimeoutExpired:
+        return False, "TIMEOUT"
+
+    except Exception as e:
+        return False, f"ERROR: {str(e)}"
+
+
 # ---------------------------------------------------------
 # Secondary Metrics (Date Synchronization Section)
 # ---------------------------------------------------------
@@ -460,8 +491,26 @@ status_bar = f"""
 </div>
 """
 
-st.markdown(status_bar, unsafe_allow_html=True)
+top_left, top_right = st.columns([7.5, 1.8])
 
+with top_left:
+    st.markdown(status_bar, unsafe_allow_html=True)
+
+with top_right:
+    with st.container(border=True):
+        st.markdown("**JBoss Control**")
+        st.caption("Restart application server")
+
+        confirm_restart = st.checkbox("Confirm restart", key="confirm_jboss_restart")
+
+        if st.button("Restart JBoss", use_container_width=True, disabled=not confirm_restart):
+            with st.spinner("Restarting JBoss..."):
+                ok, message = restart_jboss()
+
+            if ok:
+                st.success(message)
+            else:
+                st.error(message)
 
 # ---------------------------------------------------------
 # Secondary Metrics Display
@@ -516,7 +565,7 @@ if "tx_history" not in st.session_state:
 
 st.session_state.tx_history.append((now_ts, current_tx))
 
-# keep only roughly last 60 seconds
+# keep only roughly last 180 seconds
 st.session_state.tx_history = [
     item for item in st.session_state.tx_history
     if now_ts - item[0] <= 180
