@@ -498,7 +498,10 @@ st.markdown(secondary_bar, unsafe_allow_html=True)
 
 st.subheader("COB Monitor")
 
+# Transactions per minute metric
+
 import time
+
 raw_tx = run_script("db_get_cob_transactions.sh")
 
 try:
@@ -508,30 +511,42 @@ except:
 
 now_ts = time.time()
 
-if "prev_tx" not in st.session_state:
-    st.session_state.prev_tx = current_tx
-    st.session_state.prev_tx_ts = now_ts
-    tx_per_min = 0
-else:
-    elapsed = now_ts - st.session_state.prev_tx_ts
-    tx_delta = current_tx - st.session_state.prev_tx
+if "tx_history" not in st.session_state:
+    st.session_state.tx_history = []
 
-    if elapsed > 0:
-        tx_per_min = int(tx_delta * 60 / elapsed)
-    else:
-        tx_per_min = 0
+st.session_state.tx_history.append((now_ts, current_tx))
 
-    st.session_state.prev_tx = current_tx
-    st.session_state.prev_tx_ts = now_ts
+# keep only roughly last 60 seconds
+st.session_state.tx_history = [
+    item for item in st.session_state.tx_history
+    if now_ts - item[0] <= 60
+]
 
 transactions_processed = f"{current_tx:,}"
 
-if tx_per_min > 0:
-    tx_rate_text = f"+{tx_per_min:,}/min"
-elif tx_per_min == 0:
-    tx_rate_text = "No movement"
-else:
-    tx_rate_text = f"{tx_per_min:,}/min"
+tx_rate_text = "Avg: --/min"
+
+if len(st.session_state.tx_history) >= 2:
+    oldest_ts, oldest_tx = st.session_state.tx_history[0]
+    newest_ts, newest_tx = st.session_state.tx_history[-1]
+
+    elapsed = newest_ts - oldest_ts
+    delta = newest_tx - oldest_tx
+
+    if elapsed > 0:
+        avg_per_min = int(delta * 60 / elapsed)
+
+        if avg_per_min > 0:
+            tx_rate_text = f"Avg: +{avg_per_min:,}/min"
+        elif avg_per_min == 0:
+            tx_rate_text = "Avg: 0/min"
+        else:
+            tx_rate_text = f"Avg: {avg_per_min:,}/min"
+
+
+#-----------------------------
+
+
 
 
 if cob_progress_error:
@@ -587,22 +602,40 @@ elif cob_progress_data and cob_progress_data.get("stages"):
             </div>
         </div>
         """, unsafe_allow_html=True)
-    
+        
     with tx_col:
         st.markdown(f"""
         <div class="cob-summary-card">
-            <div class="cob-big-pct" style="color:#0f172a; text-align:center;">
-                {transactions_processed}
+            <div style="
+                display:flex;
+                justify-content:space-between;
+                align-items:baseline;
+                gap:12px;
+            ">
+                <div class="cob-big-pct" style="
+                    color:#0f172a;
+                    text-align:left;
+                    margin-bottom:0;
+                ">
+                    {transactions_processed}
+                </div>
+    
+                <div style="
+                    font-size:13px;
+                    font-weight:600;
+                    color:#64748b;
+                    white-space:nowrap;
+                ">
+                    {tx_rate_text}
+                </div>
             </div>
-            <div class="cob-summary-subtitle" style="text-align:center; margin-top:8px;">
-                {tx_rate_text}
-            </div>
-            <div class="cob-summary-subtitle" style="text-align:center; margin-bottom:0;">
+    
+            <div class="cob-summary-subtitle" style="margin-top:8px; margin-bottom:0; text-align:center;">
                 Transactions processed
             </div>
         </div>
         """, unsafe_allow_html=True)
-    
+            
     with pct_col:
         st.markdown(f"""
         <div class="cob-summary-card">
