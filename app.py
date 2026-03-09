@@ -13,12 +13,202 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-div[data-testid="stProgress"] > div > div > div > div {
-    background-color: #3b82f6;
+
+/* ---------------------------------------------------------
+   GLOBAL LAYOUT
+--------------------------------------------------------- */
+.block-container {
+    padding-top: 1.2rem;
+    padding-bottom: 2rem;
 }
+
+/* ---------------------------------------------------------
+   TOP STATUS BAR
+--------------------------------------------------------- */
+.top-status-bar {
+    background: #0f172a;
+    border-radius: 14px;
+    padding: 14px 22px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: flex-start;
+    gap: 36px;
+    color: white;
+    font-size: 14px;
+    flex-wrap: wrap;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.18);
+}
+
+/* ---------------------------------------------------------
+   SECONDARY METRICS
+--------------------------------------------------------- */
+.secondary-metrics {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    gap: 14px;
+    margin-bottom: 10px;
+}
+
+.secondary-card {
+    flex: 1;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 16px 18px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.secondary-label {
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 6px;
+}
+
+.secondary-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+/* ---------------------------------------------------------
+   COB SUMMARY CARD
+--------------------------------------------------------- */
+.cob-summary-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 20px 22px 18px 22px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+    margin-bottom: 18px;
+}
+
+.cob-summary-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 6px;
+}
+
+.cob-summary-subtitle {
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 12px;
+}
+
+.cob-big-pct {
+    text-align: right;
+    font-size: 34px;
+    font-weight: 800;
+}
+
+/* ---------------------------------------------------------
+   CUSTOM PROGRESS BARS
+--------------------------------------------------------- */
+.progress-track {
+    width: 100%;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.5s ease-in-out;
+}
+
+.progress-overall-track {
+    background: #d1d5db;
+    height: 18px;
+}
+
+.progress-stage-track {
+    background: #cbd5e1;
+    height: 16px;
+}
+
+/* ---------------------------------------------------------
+   STAGE TABLE
+--------------------------------------------------------- */
+.stage-header {
+    font-size: 12px;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 8px;
+}
+
+.stage-cell {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 14px 16px;
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+.stage-name-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.stage-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.stage-number {
+    font-size: 15px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.stage-pct {
+    font-size: 15px;
+    font-weight: 700;
+    color: #111827;
+}
+
+/* ---------------------------------------------------------
+   STATUS PILLS
+--------------------------------------------------------- */
+.status-pill {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    width: fit-content;
+}
+
+.status-completed {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-running {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.status-pending {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+.status-failed {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
 </style>
 """, unsafe_allow_html=True)
-
 
 
 SCRIPTS_DIR = Path(__file__).parent / "scripts"
@@ -162,13 +352,22 @@ def get_cob_progress():
         return None, "ERROR"
 
 
-def get_progress_color(pct):
-    if pct >= 100:
-        return "#22c55e"
-    elif pct > 0:
-        return "#facc15"
-    return "#334155"
+def get_stage_status(processed, total, pct):
+    if total > 0 and processed >= total:
+        return "COMPLETED"
+    elif processed > 0:
+        return "RUNNING"
+    else:
+        return "PENDING"
 
+
+def get_status_pill_class(status):
+    return {
+        "COMPLETED": "status-completed",
+        "RUNNING": "status-running",
+        "PENDING": "status-pending",
+        "FAILED": "status-failed"
+    }.get(status, "status-pending")
 
 # ---------------------------------------------------------
 # Secondary Metrics (Date Synchronization Section)
@@ -189,7 +388,7 @@ try:
 
     if date_diff == 0:
         diff_text = "IN SYNC"
-        diff_color = "#00ff9c"
+        diff_color = "#16a34a"
     else:
         diff_text = f"{date_diff} day(s)"
         diff_color = "#ff5c5c"
@@ -199,12 +398,6 @@ except ValueError:
     diff_text = "ERROR"
     diff_color = "#ff5c5c"
 
-
-secondary_metrics = [
-    {"label": "Transact Date", "value": transact_date, "color": "#00ff9c"},
-    {"label": "System Date", "value": system_date, "color": "#00ff9c"},
-    {"label": "Difference", "value": diff_text, "color": diff_color},
-]
 
 cob_progress_data, cob_progress_error = get_cob_progress()
 
@@ -242,19 +435,7 @@ for metric in metric_values:
 """
 
 status_bar = f"""
-<div style="
-    background:#0f172a;
-    border-radius:10px;
-    padding:12px 20px;
-    margin-top:10px;
-    margin-bottom:20px;
-    display:flex;
-    justify-content:flex-start;
-    gap:40px;
-    color:white;
-    font-size:14px;
-    flex-wrap:wrap;
-">
+<div class="top-status-bar">
     {status_items}
 </div>
 """
@@ -269,28 +450,22 @@ st.markdown(status_bar, unsafe_allow_html=True)
 # st.markdown("---")
 
 secondary_html = f"""
-<div style="
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:10px 20px;
-font-size:18px;
-">
+<div class="secondary-metrics">
 
-<div>
-<b>Transact Date</b><br>
-{transact_date}
-</div>
+    <div class="secondary-card">
+        <div class="secondary-label">Transact Date</div>
+        <div class="secondary-value">{transact_date}</div>
+    </div>
 
-<div>
-<b>System Date</b><br>
-{system_date}
-</div>
+    <div class="secondary-card">
+        <div class="secondary-label">System Date</div>
+        <div class="secondary-value">{system_date}</div>
+    </div>
 
-<div>
-<b>Difference</b><br>
-<span style="color:{diff_color};">{diff_text}</span>
-</div>
+    <div class="secondary-card">
+        <div class="secondary-label">Difference</div>
+        <div class="secondary-value" style="color:{diff_color};">{diff_text}</div>
+    </div>
 
 </div>
 """
@@ -311,114 +486,184 @@ st.subheader("COB Monitor")
 
 if cob_progress_error:
     st.error(f"Unable to load COB progress: {cob_progress_error}")
+
 elif cob_progress_data and cob_progress_data.get("stages"):
     system_time = cob_progress_data.get("system_time", "N/A")
     cob_date = cob_progress_data.get("cob_date", "N/A")
     company_id = cob_progress_data.get("company_id", "N/A")
     stages = cob_progress_data.get("stages", [])
 
-    # Remove COB from lower table, because it is shown separately above
     stage_rows = [
         row for row in stages
         if row.get("stage", "").strip().upper() != "COB"
     ]
 
-    # ---------------------------------------------------------
-    # Overall COB Progress
-    # ---------------------------------------------------------
     cob_row = next(
         (row for row in stages if row.get("stage", "").strip().upper() == "COB"),
         None
     )
-    
+
     if cob_row:
         total_processed = int(cob_row.get("processed", 0))
         total_jobs = int(cob_row.get("total", 0))
     else:
         total_processed = sum(int(row.get("processed", 0)) for row in stage_rows)
         total_jobs = sum(int(row.get("total", 0)) for row in stage_rows)
-        
-    if total_jobs > 0:
-        overall_pct = (total_processed / total_jobs) * 100
-    else:
-        overall_pct = 0
+
+    overall_pct = (total_processed / total_jobs) * 100 if total_jobs > 0 else 0
 
     if overall_pct >= 100:
         overall_color = "#22c55e"
-    elif overall_pct >= 50:
-        overall_color = "#3b82f6"
     elif overall_pct > 0:
-        overall_color = "#f59e0b"
+        overall_color = "#16a34a"
     else:
         overall_color = "#64748b"
+
+    # ---------------------------------------------------------
+    # Summary card
+    # ---------------------------------------------------------
+    title_col, pct_col = st.columns([4, 1])
     
-  
-    box_col1, box_col2 = st.columns([4, 1])
+    with title_col:
+        st.markdown(f"""
+        <div class="cob-summary-card">
+            <div class="cob-summary-title">COB Completion</div>
+            <div class="cob-summary-subtitle">
+                Live operational view of current COB execution progress
+            </div>
+            <div class="progress-track progress-overall-track">
+                <div class="progress-fill" style="
+                    background:#22c55e;
+                    width:{min(overall_pct, 100)}%;
+                    height:100%;
+                "></div>
+            </div>
+            <div class="cob-summary-subtitle" style="margin-top:10px; margin-bottom:0;">
+                {total_processed} / {total_jobs} jobs completed
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     
-    with box_col1:
-        st.markdown("**COB Completion**")
-    
-    with box_col2:
-        st.markdown(
-            f"""
-            <div style="text-align:right; font-size:32px; font-weight:800; color:{overall_color};">
+    with pct_col:
+        st.markdown(f"""
+        <div class="cob-summary-card">
+            <div class="cob-big-pct" style="color:{overall_color};">
                 {overall_pct:.2f}%
             </div>
-            """,
-            unsafe_allow_html=True
-        )
-    
-    st.progress(overall_pct / 100 if total_jobs else 0)
-    
-    st.caption(f"{total_processed} / {total_jobs} jobs completed")
+            <div class="cob-summary-subtitle" style="text-align:right; margin-bottom:0;">
+                Overall progress
+            </div>
+        </div>
+        """, unsafe_allow_html=True)    
 
     
     # ---------------------------------------------------------
-    # Stage Progress Table
+    # Context row
     # ---------------------------------------------------------
+    context_html = f"""
+    <div class="secondary-metrics" style="margin-top:8px; margin-bottom:18px;">
+        <div class="secondary-card">
+            <div class="secondary-label">System Time</div>
+            <div class="secondary-value">{system_time}</div>
+        </div>
+        <div class="secondary-card">
+            <div class="secondary-label">COB Date</div>
+            <div class="secondary-value">{cob_date}</div>
+        </div>
+        <div class="secondary-card">
+            <div class="secondary-label">Company</div>
+            <div class="secondary-value" style="font-size:18px;">{company_id}</div>
+        </div>
+    </div>
+    """
+    st.markdown(context_html, unsafe_allow_html=True)
 
-    header_cols = st.columns([2.2, 4, 1.2, 1.2, 1.2])
-    header_cols[0].markdown("**Stage**")
-    header_cols[1].markdown("**Progress**")
-    header_cols[2].markdown("**Processed**")
-    header_cols[3].markdown("**Total**")
-    header_cols[4].markdown("**% Completed**")
+    # ---------------------------------------------------------
+    # Stage table header
+    # ---------------------------------------------------------
+    header_cols = st.columns([2.4, 4, 1.2, 1.2, 1.4])
+    header_cols[0].markdown('<div class="stage-header">Stage</div>', unsafe_allow_html=True)
+    header_cols[1].markdown('<div class="stage-header">Progress</div>', unsafe_allow_html=True)
+    header_cols[2].markdown('<div class="stage-header">Processed</div>', unsafe_allow_html=True)
+    header_cols[3].markdown('<div class="stage-header">Total</div>', unsafe_allow_html=True)
+    header_cols[4].markdown('<div class="stage-header">% Completed</div>', unsafe_allow_html=True)
+
+    # ---------------------------------------------------------
+    # Stage rows
+    # ---------------------------------------------------------
+    def safe_int(value, default=0):
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return default
+    
+    def safe_float(value, default=0.0):
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return default
 
     for row in stage_rows:
         stage = row.get("stage", "N/A")
-        processed = row.get("processed", 0)
-        total = row.get("total", 0)
-        pct = float(row.get("pct_completed", 0))
+        processed = safe_int(row.get("processed", 0))
+        total = safe_int(row.get("total", 0))
+        pct = safe_float(row.get("pct_completed", 0))
+        status = get_stage_status(processed, total, pct)
+        pill_class = get_status_pill_class(status)
 
-        cols = st.columns([2.2, 4, 1.2, 1.2, 1.2])
+        if status == "COMPLETED":
+            progress_color = "#16a34a"
+        elif status == "RUNNING":
+            progress_color = "#1e3a5f"
+        else:
+            progress_color = "#64748b"
 
-        cols[0].markdown(f"**{stage}**")
+        cols = st.columns([2.4, 4, 1.2, 1.2, 1.4])
 
-        progress_color = get_progress_color(pct)
+        cols[0].markdown(f"""
+        <div class="stage-cell">
+            <div class="stage-name-wrap">
+                <div class="stage-name">{stage}</div>
+                <span class="status-pill {pill_class}">{status}</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
         progress_html = f"""
-        <div style="
-            background:#1e293b;
-            border-radius:8px;
-            height:20px;
-            width:100%;
-            overflow:hidden;
-            border:1px solid #334155;
-        ">
-            <div style="
-                background:{progress_color};
-                width:{min(pct, 100)}%;
-                height:100%;
-                transition:width 0.5s ease-in-out;
-            "></div>
+        <div class="stage-cell">
+            <div class="progress-track progress-stage-track">
+                <div class="progress-fill" style="
+                    background:{progress_color};
+                    width:{min(pct, 100)}%;
+                    height:100%;
+                "></div>
+            </div>
         </div>
         """
         cols[1].markdown(progress_html, unsafe_allow_html=True)
 
-        cols[2].markdown(str(processed))
-        cols[3].markdown(str(total))
-        cols[4].markdown(f"{pct:.2f}%")
+        cols[2].markdown(f"""
+        <div class="stage-cell">
+            <div class="stage-number">{processed}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        cols[3].markdown(f"""
+        <div class="stage-cell">
+            <div class="stage-number">{total}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        cols[4].markdown(f"""
+        <div class="stage-cell">
+            <div class="stage-pct">{pct:.2f}%</div>
+        </div>
+        """, unsafe_allow_html=True)
+
 else:
     st.warning("No COB progress data available.")
+
+
 
 
 # ---------------------------------------------------------
