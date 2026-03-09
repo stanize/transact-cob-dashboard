@@ -498,6 +498,8 @@ st.markdown(secondary_bar, unsafe_allow_html=True)
 
 st.subheader("COB Monitor")
 
+transactions_processed = run_script("db_get_cob_transactions.sh")
+
 if cob_progress_error:
     st.error(f"Unable to load COB progress: {cob_progress_error}")
 
@@ -533,15 +535,12 @@ elif cob_progress_data and cob_progress_data.get("stages"):
     # ---------------------------------------------------------
     # Summary card
     # ---------------------------------------------------------
-    title_col, pct_col = st.columns([4, 1])
+    title_col, tx_col, pct_col = st.columns([4, 1.2, 1])
     
     with title_col:
         st.markdown(f"""
         <div class="cob-summary-card">
-            <div class="cob-summary-title">COB Completion</div>
-            <div class="cob-summary-subtitle">
-                Live operational view of current COB execution progress
-            </div>
+            <div class="cob-summary-title">COB Progress</div>
             <div class="progress-track progress-overall-track">
                 <div class="progress-fill" style="
                     background:#22c55e;
@@ -551,6 +550,18 @@ elif cob_progress_data and cob_progress_data.get("stages"):
             </div>
             <div class="cob-summary-subtitle" style="margin-top:10px; margin-bottom:0;">
                 {total_processed} / {total_jobs} jobs completed
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with tx_col:
+        st.markdown(f"""
+        <div class="cob-summary-card">
+            <div class="cob-big-pct" style="color:#0f172a; text-align:center;">
+                {transactions_processed}
+            </div>
+            <div class="cob-summary-subtitle" style="text-align:center; margin-bottom:0;">
+                Transactions processed
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -565,8 +576,7 @@ elif cob_progress_data and cob_progress_data.get("stages"):
                 Overall progress
             </div>
         </div>
-        """, unsafe_allow_html=True)    
-
+        """, unsafe_allow_html=True)
 
     # ---------------------------------------------------------
     # Stage table header
