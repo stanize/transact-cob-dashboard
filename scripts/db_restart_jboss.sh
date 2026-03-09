@@ -10,13 +10,27 @@ if ! sudo systemctl restart jboss; then
     exit 1
 fi
 
-echo "Waiting for JBoss to become fully available..."
+echo "Waiting for JBoss restart cycle to begin..."
 
-for i in {1..60}
+restart_started=0
+running_count=0
+
+for i in {1..90}
 do
     STATUS=$("$CHECK_SCRIPT")
+    echo "Current status: $STATUS"
 
-    if [[ "$STATUS" == "RUNNING" ]]; then
+    if [[ "$STATUS" != "RUNNING" ]]; then
+        restart_started=1
+    fi
+
+    if [[ "$restart_started" -eq 1 && "$STATUS" == "RUNNING" ]]; then
+        running_count=$((running_count + 1))
+    else
+        running_count=0
+    fi
+
+    if [[ "$running_count" -ge 2 ]]; then
         echo "JBoss successfully restarted"
         exit 0
     fi
