@@ -51,10 +51,16 @@ else
 fi
 
 # --------------------------------------------------
-# Stage  - 
+# Stage 3 - Start JBoss and wait for deployments
 # --------------------------------------------------
-log "TBD - Starting JBoss"
-sleep 1
+
+log "Starting JBoss and waiting for deployments"
+
+if ! "$SCRIPT_DIR/db_start_jboss_full.sh"; then
+    fail "JBoss start or deployment validation failed"
+fi
+
+done_msg "JBoss fully deployed"
 
 # --------------------------------------------------
 # Stage  - 
