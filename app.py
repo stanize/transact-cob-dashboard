@@ -254,9 +254,12 @@ div[data-testid="stCheckbox"] {
 
 SCRIPTS_DIR = Path(__file__).parent / "scripts"
 
-# Refresh every 5 seconds
-st_autorefresh(interval=5000, key="refresh")
+if "restart_in_progress" not in st.session_state:
+    st.session_state.restart_in_progress = False
 
+if not st.session_state.restart_in_progress:
+    st_autorefresh(interval=5000, key="refresh")
+    
 
 def run_script(script_name, timeout=30):
     script_path = SCRIPTS_DIR / script_name
@@ -538,26 +541,23 @@ with top_right:
             restart_clicked = st.button(
                 "Restart JBoss",
                 use_container_width=True,
-                disabled=not confirm_restart
+                disabled=not confirm_restart or st.session_state.restart_in_progress
             )
 
-    if restart_clicked:
-        with st.spinner("Restarting JBoss..."):
-    
-            start = time.time()
-    
-            ok, message = restart_jboss()
-    
-            elapsed = time.time() - start
-            min_duration = 25   # seconds
-    
-            if elapsed < min_duration:
-                time.sleep(min_duration - elapsed)
+        if restart_clicked:
+            st.session_state.restart_in_progress = True
+
+            with st.spinner("Restarting JBoss..."):
+                ok, message = restart_jboss()
+
+            st.session_state.restart_in_progress = False
 
             if ok:
                 st.success(message)
             else:
                 st.error(message)
+                
+
 # ---------------------------------------------------------
 # Secondary Metrics Display
 # ---------------------------------------------------------
