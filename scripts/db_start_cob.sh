@@ -28,16 +28,27 @@ fi
 done_msg "JBoss stop completed"
 
 # --------------------------------------------------
-# Dummy stages (to be implemented later)
+# Stage 2 - Clear TSA.STATUS
 # --------------------------------------------------
 
-# --------------------------------------------------
-# Stage  - 
-# --------------------------------------------------
+log "Clearing TSA.STATUS"
 
-log "TBD - Clearing TSA.STATUS"
-sleep 1
-done_msg "TBD - TSA.STATUS cleared"
+output=$(psql -h T24-DB -U t24 -d BANCA -c 'DELETE FROM "public"."F_TSA_STATUS";' 2>&1)
+exit_code=$?
+
+if [ $exit_code -ne 0 ]; then
+    echo "$output"
+    fail "Failed to clear TSA.STATUS"
+fi
+
+deleted_count=$(echo "$output" | grep -oP 'DELETE \K\d+')
+
+if [ -n "$deleted_count" ]; then
+    done_msg "TSA.STATUS cleared. Deleted rows: $deleted_count"
+else
+    echo "$output"
+    fail "TSA.STATUS cleanup completed but deleted row count could not be confirmed"
+fi
 
 # --------------------------------------------------
 # Stage  - 
