@@ -10,6 +10,9 @@ echo "Pulling latest version from GitHub..."
 git fetch origin
 git reset --hard origin/main
 
+echo "[INFO] Setting execute permissions for scripts..."
+chmod +x scripts/*.sh
+
 echo "Activating virtual environment..."
 source venv/bin/activate
 
