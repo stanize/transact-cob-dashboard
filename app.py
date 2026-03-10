@@ -103,6 +103,25 @@ div[data-testid="stCheckbox"] {
     color: #0f172a;
 }
 
+
+/* ---------------------------------------------------------
+   Start COB Button (green)
+--------------------------------------------------------- */
+
+div[data-testid="stButton"][data-cob-start="true"] button {
+    background-color: #16a34a;
+    color: white;
+    border-radius: 10px;
+    border: none;
+    height: 36px;
+    font-weight: 600;
+}
+
+div[data-testid="stButton"][data-cob-start="true"] button:hover {
+    background-color: #15803d;
+}
+
+
 /* ---------------------------------------------------------
    COB SUMMARY CARD
 --------------------------------------------------------- */
@@ -606,11 +625,13 @@ if cob_service_control == "STOP":
 
     with st.container(border=True):
         st.markdown("**COB is currently stopped**")
-        st.button("Start COB", use_container_width=True)
+        st.markdown('<div data-cob-start="true">', unsafe_allow_html=True)
+        st.button("Start COB")
+        st.markdown('</div>', unsafe_allow_html=True)
 
 elif cob_service_control == "START":
 
-    # Transactions per minute metric
+# Transactions per minute metric
     
     raw_tx = run_script("db_get_cob_transactions.sh")
     
