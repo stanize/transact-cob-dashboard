@@ -2,6 +2,7 @@ import streamlit as st
 import subprocess
 import json
 import time
+from datetime import datetime
 from pathlib import Path
 from streamlit_autorefresh import st_autorefresh
 
@@ -70,7 +71,6 @@ div[data-testid="stCheckbox"] {
     margin-bottom: 6px;
 }
 
-
 /* ---------------------------------------------------------
    SECONDARY METRICS
 --------------------------------------------------------- */
@@ -108,17 +108,12 @@ div[data-testid="stCheckbox"] {
    Start COB Button (green)
 --------------------------------------------------------- */
 
-div[data-testid="stButton"][data-cob-start="true"] button {
-    background-color: #16a34a;
-    color: white;
-    border-radius: 10px;
-    border: none;
-    height: 36px;
-    font-weight: 600;
+button[kind="primary"] {
+    background-color: #16a34a !important;
 }
 
-div[data-testid="stButton"][data-cob-start="true"] button:hover {
-    background-color: #15803d;
+button[kind="primary"]:hover {
+    background-color: #15803d !important;
 }
 
 
@@ -482,8 +477,6 @@ def restart_jboss():
 # Secondary Metrics (Date Synchronization Section)
 # ---------------------------------------------------------
 
-from datetime import datetime
-
 system_date = datetime.now().strftime("%Y-%m-%d")
 
 transact_raw = run_script("db_get_transact_date.sh")
@@ -624,10 +617,7 @@ cob_service_control = run_script("db_get_cob_service_control.sh").strip().upper(
 if cob_service_control == "STOP":
 
     with st.container(border=True):
-        st.markdown("**COB is currently stopped**")
-        st.markdown('<div data-cob-start="true">', unsafe_allow_html=True)
-        st.button("Start COB")
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.button("Start COB", type="primary")
 
 elif cob_service_control == "START":
 
