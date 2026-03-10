@@ -336,6 +336,11 @@ METRICS = [
         "script": "db_check_jboss_status.sh"
     },
     {
+        "name": "JBoss Uptime",
+        "type": "text",
+        "script": "db_get_jboss_uptime.sh"
+    },
+    {
         "name": "TSM",
         "type": "status",
         "script": "db_check_tsm_status.sh"
