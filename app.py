@@ -297,7 +297,7 @@ def get_status(script_name):
     output = run_script(script_name)
 
     if output in ["SCRIPT NOT FOUND", "ERROR", "TIMEOUT"]:
-    return output
+        return output
     
     status = output.upper()
 
