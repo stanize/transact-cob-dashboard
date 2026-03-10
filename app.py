@@ -473,6 +473,44 @@ def restart_jboss():
         return False, f"ERROR: {str(e)}"
 
 
+def run_script_live(script_name):
+    script_path = SCRIPTS_DIR / script_name
+
+    if not script_path.exists():
+        return False, ["SCRIPT NOT FOUND"]
+
+    lines = []
+
+    try:
+        process = subprocess.Popen(
+            ["bash", str(script_path)],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1
+        )
+
+        stage_placeholder = st.empty()
+        log_placeholder = st.empty()
+
+        for line in process.stdout:
+            clean_line = line.rstrip()
+            lines.append(clean_line)
+
+            if clean_line.startswith("[STAGE]"):
+                stage_placeholder.info(clean_line.replace("[STAGE] ", ""))
+
+            log_placeholder.code("\n".join(lines), language="bash")
+
+        process.wait()
+
+        return process.returncode == 0, lines
+
+    except Exception as e:
+        return False, [f"ERROR: {str(e)}"]
+
+
+
 # ---------------------------------------------------------
 # Secondary Metrics (Date Synchronization Section)
 # ---------------------------------------------------------
@@ -617,8 +655,18 @@ cob_service_control = run_script("db_get_cob_service_control.sh").strip().upper(
 if cob_service_control == "STOP":
 
     with st.container(border=True):
-        st.button("Start COB", type="primary")
+        start_cob_clicked = st.button("Start COB", type="primary")
 
+    if start_cob_clicked:
+        st.subheader("COB Execution Log")
+
+        ok, log_lines = run_script_live("db_start_cob.sh")
+
+        if ok:
+            st.success("COB start workflow completed.")
+        else:
+            st.error("COB start workflow failed.")
+            
 elif cob_service_control == "START":
 
 # Transactions per minute metric
