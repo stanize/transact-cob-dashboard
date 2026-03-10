@@ -273,6 +273,9 @@ if "restart_in_progress" not in st.session_state:
 
 if "cob_start_in_progress" not in st.session_state:
     st.session_state.cob_start_in_progress = False
+
+if "cob_start_requested" not in st.session_state:
+    st.session_state.cob_start_requested = False
     
 if not st.session_state.restart_in_progress and not st.session_state.cob_start_in_progress:
     st_autorefresh(interval=5000, key="refresh")    
@@ -665,14 +668,21 @@ if cob_service_control == "STOP":
         )
 
     if start_cob_clicked:
+        st.session_state.cob_start_requested = True
+        st.rerun()
+
+    if st.session_state.cob_start_requested and not st.session_state.cob_start_in_progress:
         st.session_state.cob_start_in_progress = True
+        st.session_state.cob_start_requested = False
+        st.rerun()
 
+    if st.session_state.cob_start_in_progress:
         st.subheader("COB Execution Log")
-
+    
         ok, log_lines = run_script_live("db_start_cob.sh")
-
+    
         st.session_state.cob_start_in_progress = False
-
+    
         if ok:
             st.success("COB start workflow completed.")
         else:
