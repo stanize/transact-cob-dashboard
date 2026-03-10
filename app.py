@@ -677,7 +677,7 @@ if cob_service_control == "STOP":
         st.rerun()
 
     if st.session_state.cob_start_in_progress:
-        st.subheader("COB Execution Log")
+        st.subheader("COB Start Workflow Log")
     
         ok, log_lines = run_script_live("db_start_cob.sh")
     
