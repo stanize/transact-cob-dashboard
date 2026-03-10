@@ -271,9 +271,12 @@ SCRIPTS_DIR = Path(__file__).parent / "scripts"
 if "restart_in_progress" not in st.session_state:
     st.session_state.restart_in_progress = False
 
-if not st.session_state.restart_in_progress:
-    st_autorefresh(interval=5000, key="refresh")
+if "cob_start_in_progress" not in st.session_state:
+    st.session_state.cob_start_in_progress = False
     
+if not st.session_state.restart_in_progress and not st.session_state.cob_start_in_progress:
+    st_autorefresh(interval=5000, key="refresh")    
+
 
 def run_script(script_name, timeout=30):
     script_path = SCRIPTS_DIR / script_name
@@ -655,12 +658,20 @@ cob_service_control = run_script("db_get_cob_service_control.sh").strip().upper(
 if cob_service_control == "STOP":
 
     with st.container(border=True):
-        start_cob_clicked = st.button("Start COB", type="primary")
+        start_cob_clicked = st.button(
+            "Start COB",
+            type="primary",
+            disabled=st.session_state.cob_start_in_progress
+        )
 
     if start_cob_clicked:
+        st.session_state.cob_start_in_progress = True
+
         st.subheader("COB Execution Log")
 
         ok, log_lines = run_script_live("db_start_cob.sh")
+
+        st.session_state.cob_start_in_progress = False
 
         if ok:
             st.success("COB start workflow completed.")
