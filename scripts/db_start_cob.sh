@@ -63,16 +63,14 @@ fi
 done_msg "JBoss fully deployed"
 
 # --------------------------------------------------
-# Stage  - 
+# Stage 4 - Stop TSA services
 # --------------------------------------------------
-log "TBD - Waiting for full deployment"
-sleep 1
 
-# --------------------------------------------------
-# Stage  - 
-# --------------------------------------------------
-log "TBD - Stopping TSA services"
-sleep 1
+if ! "$SCRIPT_DIR/db_stop_tsa_services.sh"; then
+    fail "Failed to stop one or more TSA services"
+fi
+
+done_msg "TSA services stopped"
 
 # --------------------------------------------------
 # Stage  - 
