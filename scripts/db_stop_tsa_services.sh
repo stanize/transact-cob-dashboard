@@ -37,9 +37,6 @@ while IFS= read -r service; do
 
     echo "[STAGE] Stopping TSA service: $service"
 
-    echo "[DEBUG] OFS Request: TSA.SERVICE,STOP/I/PROCESS,${OFS_USER}/${OFS_PASS},${service}"
-
-
     service_ofs="${service//\//^}"
 
     ofs="TSA.SERVICE,STOP/I/PROCESS,${OFS_USER}/${OFS_PASS},${service_ofs} "
