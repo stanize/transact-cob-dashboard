@@ -1,3 +1,23 @@
+#!/bin/bash
+
+DB_HOST="T24-DB"
+DB_USER="t24"
+DB_NAME="BANCA"
+
+OFS_URL="http://localhost:8080/TAFJRestServices/resources/ofs"
+OFS_AUTH="Basic dGFmai5hZG1pbjpBWElAZ3RwcXJYNC=="
+
+OFS_USER="AUTO01"
+OFS_PASS="123123"
+
+echo "[STAGE] Stopping TSA services"
+
+services=$(psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -At -F '|' -c "
+SELECT recid
+FROM public.\"F_TSA_SERVICE\"
+WHERE COALESCE((xmlrecord::json)->>'6','') <> 'STOP'
+ORDER BY recid;
+")
 rc=$?
 
 if [ $rc -ne 0 ]; then
