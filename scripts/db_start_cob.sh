@@ -73,10 +73,12 @@ fi
 done_msg "TSA services stopped"
 
 # --------------------------------------------------
-# Stage  - 
+# Stage 5 - Resolve EB.EOD.ERRORS
 # --------------------------------------------------
-log "TBD - Resolving EB.EOD.ERRORS"
-sleep 1
+
+if ! "$SCRIPT_DIR/db_resolve_eb_eod_errors.sh"; then
+    fail "Failed to resolve EB.EOD.ERROR records"
+fi
 
 # --------------------------------------------------
 # Stage  - 
