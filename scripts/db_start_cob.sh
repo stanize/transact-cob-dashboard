@@ -81,20 +81,24 @@ if ! "$SCRIPT_DIR/db_resolve_eb_eod_errors.sh"; then
 fi
 
 # --------------------------------------------------
-# Stage  - 
+# Stage 6 - Start TSM and COB
 # --------------------------------------------------
-log "TBD - Starting TSM and COB"
-sleep 1
+
+if ! "$SCRIPT_DIR/db_start_tsm.sh"; then
+    fail "Failed to start TSM"
+fi
+
+if ! "$SCRIPT_DIR/db_start_cob_service.sh"; then
+    fail "Failed to start COB"
+fi
 
 # --------------------------------------------------
-# Stage  - 
+# Stage 7 - Launch TSM via TAFJEE
 # --------------------------------------------------
-log "TBD - Launching TSM via TAFJEE"
-sleep 1
 
-# --------------------------------------------------
-# Stage  - 
-# --------------------------------------------------
+if ! "$SCRIPT_DIR/db_start_tsm_tafjjee.sh"; then
+    fail "Failed to launch TSM via TAFJJEE"
+fi
 
 done_msg "COB start workflow completed"
 exit 0
