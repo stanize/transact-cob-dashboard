@@ -43,35 +43,6 @@ st.markdown("""
 
 
 /* ---------------------------------------------------------
-   JBoss Restart Button
---------------------------------------------------------- */
-
-div.stButton > button {
-    background-color: #f97316;
-    color: white;
-    border-radius: 10px;
-    border: none;
-    height: 38px;
-    font-weight: 600;
-    font-size: 13px;
-    transition: all 0.15s ease;
-}
-
-div.stButton > button:hover {
-    background-color: #ea580c;
-}
-
-div.stButton > button:disabled {
-    background-color: #fed7aa;
-    color: #7c2d12;
-}
-
-div[data-testid="stCheckbox"] {
-    margin-top: 6px;
-    margin-bottom: 6px;
-}
-
-/* ---------------------------------------------------------
    SECONDARY METRICS
 --------------------------------------------------------- */
 .secondary-metrics {
@@ -268,18 +239,14 @@ button[kind="primary"]:hover {
 
 SCRIPTS_DIR = Path(__file__).parent / "scripts"
 
-if "restart_in_progress" not in st.session_state:
-    st.session_state.restart_in_progress = False
-
 if "cob_start_in_progress" not in st.session_state:
     st.session_state.cob_start_in_progress = False
 
 if "cob_start_requested" not in st.session_state:
     st.session_state.cob_start_requested = False
     
-if not st.session_state.restart_in_progress and not st.session_state.cob_start_in_progress:
-    st_autorefresh(interval=5000, key="refresh")    
-
+if not st.session_state.cob_start_in_progress:
+    st_autorefresh(interval=5000, key="refresh")
 
 def run_script(script_name, timeout=30):
     script_path = SCRIPTS_DIR / script_name
@@ -451,34 +418,6 @@ def get_status_pill_class(status):
     }.get(status, "status-pending")
 
 
-def restart_jboss():
-    script_path = SCRIPTS_DIR / "db_restart_jboss.sh"
-
-    if not script_path.exists():
-        return False, "SCRIPT NOT FOUND"
-
-    try:
-        result = subprocess.run(
-            ["bash", str(script_path)],
-            capture_output=True,
-            text=True,
-            timeout=300
-        )
-
-        if result.returncode != 0:
-            error_msg = result.stderr.strip() or result.stdout.strip() or "ERROR"
-            return False, error_msg
-
-        output = result.stdout.strip() or "JBoss restart completed."
-        return True, output
-
-    except subprocess.TimeoutExpired:
-        return False, "TIMEOUT"
-
-    except Exception as e:
-        return False, f"ERROR: {str(e)}"
-
-
 def run_script_live(script_name):
     script_path = SCRIPTS_DIR / script_name
 
@@ -586,39 +525,7 @@ status_bar = f"""
 </div>
 """
 
-top_left, top_right = st.columns([7.5, 1.8])
-
-with top_left:
-    st.markdown(status_bar, unsafe_allow_html=True)
-
-with top_right:
-    with st.container(border=True):
-
-        c1, c2 = st.columns([1.3, 1])
-
-        with c1:
-            confirm_restart = st.checkbox("Confirm restart", key="confirm_jboss_restart")
-
-        with c2:
-            restart_clicked = st.button(
-                "Restart JBoss",
-                use_container_width=True,
-                disabled=not confirm_restart or st.session_state.restart_in_progress
-            )
-
-        if restart_clicked:
-            st.session_state.restart_in_progress = True
-
-            with st.spinner("Restarting JBoss..."):
-                ok, message = restart_jboss()
-
-            st.session_state.restart_in_progress = False
-
-            if ok:
-                st.success(message)
-            else:
-                st.error(message)
-                
+st.markdown(status_bar, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
 # Secondary Metrics Display
