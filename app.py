@@ -506,6 +506,8 @@ def run_script_live(script_name):
         return False, [f"ERROR: {str(e)}"]
 
 
+# ── DATA COLLECTION ──────────────────────────────────────────────────────────
+
 system_date = datetime.now().strftime("%Y-%m-%d")
 transact_raw = run_script("db_get_transact_date.sh")
 
@@ -530,8 +532,12 @@ except ValueError:
 
 cob_progress_data, cob_progress_error = get_cob_progress()
 
-st.title("💳 Transact COB Dashboard")
+# ── PAGE HEADER ──────────────────────────────────────────────────────────────
+
+st.title("💳 Transact Dashboard")
 st.caption("Temenos Transact COB Operations Dashboard")
+
+# ── METRIC LOOKUPS ───────────────────────────────────────────────────────────
 
 jboss_status = metric_lookup("JBoss")
 jboss_uptime = metric_lookup("JBoss Uptime")
@@ -540,9 +546,7 @@ tsm_last_run = metric_lookup("TSM Last Run")
 concurrent_users = metric_lookup("Concurrent Users")
 license_expiry = metric_lookup("License Expiry")
 
-# ── TOP STATUS BAR ──────────────────────────────────────────────────────────
-# Each card is built as a single-line string to avoid whitespace/dedent issues
-# that cause Streamlit to render raw HTML instead of styled content.
+# ── TOP STATUS BAR ───────────────────────────────────────────────────────────
 
 card_jboss = (
     '<div class="top-status-card">'
@@ -579,7 +583,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# ── SECONDARY METRICS BAR ───────────────────────────────────────────────────
+# ── SECONDARY METRICS BAR ────────────────────────────────────────────────────
 
 card_transact = (
     '<div class="secondary-card">'
@@ -607,208 +611,221 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.subheader("COB Monitor")
+# ── TABS ─────────────────────────────────────────────────────────────────────
 
-cob_service_control = run_script("db_get_cob_service_control.sh").strip().upper()
+tab_overview, tab_cob = st.tabs(["📋 Overview", "⚙️ COB Monitor"])
 
-if cob_service_control == "STOP":
+# ── TAB: OVERVIEW ────────────────────────────────────────────────────────────
 
-    with st.container(border=True):
-        start_cob_clicked = st.button(
-            "Start COB",
-            type="primary",
-            disabled=st.session_state.cob_start_in_progress
-        )
+with tab_overview:
+    st.info("Select the **COB Monitor** tab to manage and track the Close of Business process.")
 
-    if start_cob_clicked:
-        st.session_state.cob_start_requested = True
-        st.rerun()
+# ── TAB: COB MONITOR ─────────────────────────────────────────────────────────
 
-    if st.session_state.cob_start_requested and not st.session_state.cob_start_in_progress:
-        st.session_state.cob_start_in_progress = True
-        st.session_state.cob_start_requested = False
-        st.rerun()
+with tab_cob:
 
-    if st.session_state.cob_start_in_progress:
-        st.subheader("COB Start Workflow Log")
+    cob_service_control = run_script("db_get_cob_service_control.sh").strip().upper()
 
-        ok, log_lines = run_script_live("db_start_cob.sh")
+    if cob_service_control == "STOP":
 
-        st.session_state.cob_start_in_progress = False
+        with st.container(border=True):
+            start_cob_clicked = st.button(
+                "Start COB",
+                type="primary",
+                disabled=st.session_state.cob_start_in_progress
+            )
 
-        if ok:
-            st.success("COB start workflow completed.")
-        else:
-            st.error("COB start workflow failed.")
+        if start_cob_clicked:
+            st.session_state.cob_start_requested = True
+            st.rerun()
 
-elif cob_service_control == "START":
+        if st.session_state.cob_start_requested and not st.session_state.cob_start_in_progress:
+            st.session_state.cob_start_in_progress = True
+            st.session_state.cob_start_requested = False
+            st.rerun()
 
-    raw_tx = run_script("db_get_cob_transactions.sh")
+        if st.session_state.cob_start_in_progress:
+            st.subheader("COB Start Workflow Log")
 
-    try:
-        current_tx = int(raw_tx)
-    except Exception:
-        current_tx = 0
+            ok, log_lines = run_script_live("db_start_cob.sh")
 
-    now_ts = time.time()
+            st.session_state.cob_start_in_progress = False
 
-    if "tx_history" not in st.session_state:
-        st.session_state.tx_history = []
-
-    st.session_state.tx_history.append((now_ts, current_tx))
-
-    st.session_state.tx_history = [
-        item for item in st.session_state.tx_history
-        if now_ts - item[0] <= 180
-    ]
-
-    transactions_processed = f"{current_tx:,}"
-    tx_rate_text = "Avg: --/min"
-
-    if len(st.session_state.tx_history) >= 2:
-        oldest_ts, oldest_tx = st.session_state.tx_history[0]
-        newest_ts, newest_tx = st.session_state.tx_history[-1]
-
-        elapsed = newest_ts - oldest_ts
-        delta = newest_tx - oldest_tx
-
-        if elapsed > 0:
-            avg_per_min = int(delta * 60 / elapsed)
-
-            if avg_per_min > 0:
-                tx_rate_text = f"+{avg_per_min:,}/min"
-            elif avg_per_min == 0:
-                tx_rate_text = "0/min"
+            if ok:
+                st.success("COB start workflow completed.")
             else:
-                tx_rate_text = f"{avg_per_min:,}/min"
+                st.error("COB start workflow failed.")
 
-    if cob_progress_error:
-        st.error(f"Unable to load COB progress: {cob_progress_error}")
+    elif cob_service_control == "START":
 
-    elif cob_progress_data and cob_progress_data.get("stages"):
-        stages = cob_progress_data.get("stages", [])
+        raw_tx = run_script("db_get_cob_transactions.sh")
 
-        stage_rows = [
-            row for row in stages
-            if row.get("stage", "").strip().upper() != "COB"
+        try:
+            current_tx = int(raw_tx)
+        except Exception:
+            current_tx = 0
+
+        now_ts = time.time()
+
+        if "tx_history" not in st.session_state:
+            st.session_state.tx_history = []
+
+        st.session_state.tx_history.append((now_ts, current_tx))
+
+        st.session_state.tx_history = [
+            item for item in st.session_state.tx_history
+            if now_ts - item[0] <= 180
         ]
 
-        cob_row = next(
-            (row for row in stages if row.get("stage", "").strip().upper() == "COB"),
-            None
-        )
+        transactions_processed = f"{current_tx:,}"
+        tx_rate_text = "Avg: --/min"
 
-        if cob_row:
-            total_processed = safe_int(cob_row.get("processed", 0))
-            total_jobs = safe_int(cob_row.get("total", 0))
-        else:
-            total_processed = sum(safe_int(row.get("processed", 0)) for row in stage_rows)
-            total_jobs = sum(safe_int(row.get("total", 0)) for row in stage_rows)
+        if len(st.session_state.tx_history) >= 2:
+            oldest_ts, oldest_tx = st.session_state.tx_history[0]
+            newest_ts, newest_tx = st.session_state.tx_history[-1]
 
-        overall_pct = (total_processed / total_jobs) * 100 if total_jobs > 0 else 0
+            elapsed = newest_ts - oldest_ts
+            delta = newest_tx - oldest_tx
 
-        if overall_pct >= 100:
-            overall_color = "#22c55e"
-        elif overall_pct > 0:
-            overall_color = "#16a34a"
-        else:
-            overall_color = "#64748b"
+            if elapsed > 0:
+                avg_per_min = int(delta * 60 / elapsed)
 
-        title_col, tx_col, pct_col = st.columns([4, 1.2, 1])
+                if avg_per_min > 0:
+                    tx_rate_text = f"+{avg_per_min:,}/min"
+                elif avg_per_min == 0:
+                    tx_rate_text = "0/min"
+                else:
+                    tx_rate_text = f"{avg_per_min:,}/min"
 
-        with title_col:
-            st.markdown(
-                '<div class="cob-summary-card">'
-                '<div class="cob-summary-title">COB Progress</div>'
-                '<div class="progress-track progress-overall-track">'
-                f'<div class="progress-fill" style="background:#22c55e;width:{min(overall_pct, 100)}%;height:100%;"></div>'
-                '</div>'
-                f'<div class="cob-summary-subtitle" style="margin-top:10px;margin-bottom:0;">{total_processed} / {total_jobs} jobs completed</div>'
-                '</div>',
-                unsafe_allow_html=True
+        if cob_progress_error:
+            st.error(f"Unable to load COB progress: {cob_progress_error}")
+
+        elif cob_progress_data and cob_progress_data.get("stages"):
+            stages = cob_progress_data.get("stages", [])
+
+            stage_rows = [
+                row for row in stages
+                if row.get("stage", "").strip().upper() != "COB"
+            ]
+
+            cob_row = next(
+                (row for row in stages if row.get("stage", "").strip().upper() == "COB"),
+                None
             )
 
-        with tx_col:
-            st.markdown(
-                '<div class="cob-summary-card">'
-                '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">'
-                f'<div class="cob-big-pct" style="color:#0f172a;margin:0;">{transactions_processed}</div>'
-                f'<span style="font-size:12px;font-weight:600;color:#64748b;white-space:nowrap;">{tx_rate_text}</span>'
-                '</div>'
-                '<div class="cob-summary-subtitle" style="margin-top:6px;margin-bottom:0;text-align:center;">Transactions processed</div>'
-                '</div>',
-                unsafe_allow_html=True
-            )
-
-        with pct_col:
-            st.markdown(
-                '<div class="cob-summary-card">'
-                f'<div class="cob-big-pct" style="color:{overall_color};">{overall_pct:.2f}%</div>'
-                '<div class="cob-summary-subtitle" style="text-align:right;margin-bottom:0;">Overall progress</div>'
-                '</div>',
-                unsafe_allow_html=True
-            )
-
-        header_cols = st.columns([2.4, 4, 1.2, 1.2, 1.4])
-        header_cols[0].markdown('<div class="stage-header">Stage</div>', unsafe_allow_html=True)
-        header_cols[1].markdown('<div class="stage-header">Progress</div>', unsafe_allow_html=True)
-        header_cols[2].markdown('<div class="stage-header">Processed</div>', unsafe_allow_html=True)
-        header_cols[3].markdown('<div class="stage-header">Total</div>', unsafe_allow_html=True)
-        header_cols[4].markdown('<div class="stage-header">% Completed</div>', unsafe_allow_html=True)
-
-        for row in stage_rows:
-            stage = row.get("stage", "N/A")
-            processed = safe_int(row.get("processed", 0))
-            total = safe_int(row.get("total", 0))
-            pct = safe_float(row.get("pct_completed", 0))
-            status = get_stage_status(processed, total)
-            pill_class = get_status_pill_class(status)
-
-            if status == "COMPLETED":
-                progress_color = "#16a34a"
-            elif status == "RUNNING":
-                progress_color = "#1e3a5f"
+            if cob_row:
+                total_processed = safe_int(cob_row.get("processed", 0))
+                total_jobs = safe_int(cob_row.get("total", 0))
             else:
-                progress_color = "#64748b"
+                total_processed = sum(safe_int(row.get("processed", 0)) for row in stage_rows)
+                total_jobs = sum(safe_int(row.get("total", 0)) for row in stage_rows)
 
-            cols = st.columns([2.4, 4, 1.2, 1.2, 1.4])
+            overall_pct = (total_processed / total_jobs) * 100 if total_jobs > 0 else 0
 
-            cols[0].markdown(
-                '<div class="stage-cell">'
-                '<div class="stage-name-wrap">'
-                f'<div class="stage-name">{stage}</div>'
-                f'<span class="status-pill {pill_class}">{status}</span>'
-                '</div>'
-                '</div>',
-                unsafe_allow_html=True
-            )
+            if overall_pct >= 100:
+                overall_color = "#22c55e"
+            elif overall_pct > 0:
+                overall_color = "#16a34a"
+            else:
+                overall_color = "#64748b"
 
-            cols[1].markdown(
-                '<div class="stage-cell">'
-                '<div class="progress-track progress-stage-track">'
-                f'<div class="progress-fill" style="background:{progress_color};width:{min(pct, 100)}%;height:100%;"></div>'
-                '</div>'
-                '</div>',
-                unsafe_allow_html=True
-            )
+            title_col, tx_col, pct_col = st.columns([4, 1.2, 1])
 
-            cols[2].markdown(
-                f'<div class="stage-cell"><div class="stage-number">{processed}</div></div>',
-                unsafe_allow_html=True
-            )
+            with title_col:
+                st.markdown(
+                    '<div class="cob-summary-card">'
+                    '<div class="cob-summary-title">COB Progress</div>'
+                    '<div class="progress-track progress-overall-track">'
+                    f'<div class="progress-fill" style="background:#22c55e;width:{min(overall_pct, 100)}%;height:100%;"></div>'
+                    '</div>'
+                    f'<div class="cob-summary-subtitle" style="margin-top:10px;margin-bottom:0;">{total_processed} / {total_jobs} jobs completed</div>'
+                    '</div>',
+                    unsafe_allow_html=True
+                )
 
-            cols[3].markdown(
-                f'<div class="stage-cell"><div class="stage-number">{total}</div></div>',
-                unsafe_allow_html=True
-            )
+            with tx_col:
+                st.markdown(
+                    '<div class="cob-summary-card">'
+                    '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">'
+                    f'<div class="cob-big-pct" style="color:#0f172a;margin:0;">{transactions_processed}</div>'
+                    f'<span style="font-size:12px;font-weight:600;color:#64748b;white-space:nowrap;">{tx_rate_text}</span>'
+                    '</div>'
+                    '<div class="cob-summary-subtitle" style="margin-top:6px;margin-bottom:0;text-align:center;">Transactions processed</div>'
+                    '</div>',
+                    unsafe_allow_html=True
+                )
 
-            cols[4].markdown(
-                f'<div class="stage-cell"><div class="stage-pct">{pct:.2f}%</div></div>',
-                unsafe_allow_html=True
-            )
+            with pct_col:
+                st.markdown(
+                    '<div class="cob-summary-card">'
+                    f'<div class="cob-big-pct" style="color:{overall_color};">{overall_pct:.2f}%</div>'
+                    '<div class="cob-summary-subtitle" style="text-align:right;margin-bottom:0;">Overall progress</div>'
+                    '</div>',
+                    unsafe_allow_html=True
+                )
 
-    else:
-        st.warning("No COB progress data available.")
+            header_cols = st.columns([2.4, 4, 1.2, 1.2, 1.4])
+            header_cols[0].markdown('<div class="stage-header">Stage</div>', unsafe_allow_html=True)
+            header_cols[1].markdown('<div class="stage-header">Progress</div>', unsafe_allow_html=True)
+            header_cols[2].markdown('<div class="stage-header">Processed</div>', unsafe_allow_html=True)
+            header_cols[3].markdown('<div class="stage-header">Total</div>', unsafe_allow_html=True)
+            header_cols[4].markdown('<div class="stage-header">% Completed</div>', unsafe_allow_html=True)
+
+            for row in stage_rows:
+                stage = row.get("stage", "N/A")
+                processed = safe_int(row.get("processed", 0))
+                total = safe_int(row.get("total", 0))
+                pct = safe_float(row.get("pct_completed", 0))
+                status = get_stage_status(processed, total)
+                pill_class = get_status_pill_class(status)
+
+                if status == "COMPLETED":
+                    progress_color = "#16a34a"
+                elif status == "RUNNING":
+                    progress_color = "#1e3a5f"
+                else:
+                    progress_color = "#64748b"
+
+                cols = st.columns([2.4, 4, 1.2, 1.2, 1.4])
+
+                cols[0].markdown(
+                    '<div class="stage-cell">'
+                    '<div class="stage-name-wrap">'
+                    f'<div class="stage-name">{stage}</div>'
+                    f'<span class="status-pill {pill_class}">{status}</span>'
+                    '</div>'
+                    '</div>',
+                    unsafe_allow_html=True
+                )
+
+                cols[1].markdown(
+                    '<div class="stage-cell">'
+                    '<div class="progress-track progress-stage-track">'
+                    f'<div class="progress-fill" style="background:{progress_color};width:{min(pct, 100)}%;height:100%;"></div>'
+                    '</div>'
+                    '</div>',
+                    unsafe_allow_html=True
+                )
+
+                cols[2].markdown(
+                    f'<div class="stage-cell"><div class="stage-number">{processed}</div></div>',
+                    unsafe_allow_html=True
+                )
+
+                cols[3].markdown(
+                    f'<div class="stage-cell"><div class="stage-number">{total}</div></div>',
+                    unsafe_allow_html=True
+                )
+
+                cols[4].markdown(
+                    f'<div class="stage-cell"><div class="stage-pct">{pct:.2f}%</div></div>',
+                    unsafe_allow_html=True
+                )
+
+        else:
+            st.warning("No COB progress data available.")
+
+# ── FOOTER ───────────────────────────────────────────────────────────────────
 
 st.markdown(dedent("""
 ---
