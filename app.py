@@ -335,6 +335,12 @@ if "cob_start_requested" not in st.session_state:
 if not st.session_state.cob_start_in_progress:
     st_autorefresh(interval=5000, key="refresh")
 
+if "jboss_restart_requested" not in st.session_state:
+    st.session_state.jboss_restart_requested = False
+
+if "jboss_restart_in_progress" not in st.session_state:
+    st.session_state.jboss_restart_in_progress = False
+    
 
 def run_script(script_name, timeout=30):
     script_path = SCRIPTS_DIR / script_name
@@ -553,6 +559,38 @@ def run_script_live(script_name):
         return False, [f"ERROR: {str(e)}"]
 
 
+def render_jboss_restart():
+    st.subheader("JBoss Restart")
+
+    with st.container(border=True):
+        restart_clicked = st.button(
+            "Restart JBoss",
+            type="primary",
+            key="restart_jboss_btn",
+            disabled=st.session_state.get("jboss_restart_in_progress", False)
+        )
+
+    if restart_clicked:
+        st.session_state.jboss_restart_requested = True
+        st.rerun()
+
+    if st.session_state.get("jboss_restart_requested", False) and not st.session_state.get("jboss_restart_in_progress", False):
+        st.session_state.jboss_restart_requested = False
+        st.session_state.jboss_restart_in_progress = True
+        st.rerun()
+
+    if st.session_state.get("jboss_restart_in_progress", False):
+        st.subheader("JBoss Restart Workflow Log")
+
+        ok, log_lines = run_script_live("db_restart_jboss.sh")
+
+        st.session_state.jboss_restart_in_progress = False
+
+        if ok:
+            st.success("JBoss restart completed.")
+        else:
+            st.error("JBoss restart failed.")
+
 # ── DATA COLLECTION ──────────────────────────────────────────────────────────
 
 system_date = datetime.now().strftime("%Y-%m-%d")
@@ -660,27 +698,14 @@ st.markdown(
 
 # ── TABS ─────────────────────────────────────────────────────────────────────
 
-tab_overview, tab_cob = st.tabs(["⚙️ Tools", "⚙️ COB Monitor"])
+tab_operations, tab_cob = st.tabs(["Operations", "COB Monitor"])
 
 # ── TAB: OVERVIEW ────────────────────────────────────────────────────────────
 
-with tab_overview:
-    st.markdown("""
-    <div style="
-        background:#f8fafc;
-        border:1px solid #e2e8f0;
-        border-radius:12px;
-        padding:18px;
-    ">
-        <div style="font-size:16px;font-weight:700;color:#0f172a;margin-bottom:8px;">
-            Dashboard Overview
-        </div>
-        <div style="font-size:14px;color:#475569;line-height:1.6;">
-            Tools to restart JBoss, TSM, etc, etc.
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
+with tab_operations:
+    with st.container(border=True):
+        render_jboss_restart()
+        
 # ── TAB: COB MONITOR ─────────────────────────────────────────────────────────
 
 with tab_cob:
