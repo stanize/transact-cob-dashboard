@@ -540,59 +540,72 @@ tsm_last_run = metric_lookup("TSM Last Run")
 concurrent_users = metric_lookup("Concurrent Users")
 license_expiry = metric_lookup("License Expiry")
 
-status_bar = dedent(f"""
-<div class="top-status-bar">
-    <div class="top-status-card">
-        <div class="top-status-label">JBoss</div>
-        <div class="top-status-main">
-            <span class="top-status-dot" style="background:{get_color(jboss_status)};"></span>
-            <span>{jboss_status}</span>
-        </div>
-        <div class="top-status-sub">Uptime: {jboss_uptime}</div>
-    </div>
+# ── TOP STATUS BAR ──────────────────────────────────────────────────────────
+# Each card is built as a single-line string to avoid whitespace/dedent issues
+# that cause Streamlit to render raw HTML instead of styled content.
 
-    <div class="top-status-card">
-        <div class="top-status-label">TSM</div>
-        <div class="top-status-main">
-            <span class="top-status-dot" style="background:{get_color(tsm_status)};"></span>
-            <span>{tsm_status}</span>
-        </div>
-        <div class="top-status-sub">Last run: {tsm_last_run}</div>
-    </div>
+card_jboss = (
+    '<div class="top-status-card">'
+    '<div class="top-status-label">JBoss</div>'
+    '<div class="top-status-main">'
+    f'<span class="top-status-dot" style="background:{get_color(jboss_status)};"></span>'
+    f'<span>{jboss_status}</span>'
+    '</div>'
+    f'<div class="top-status-sub">Uptime: {jboss_uptime}</div>'
+    '</div>'
+)
 
-    <div class="top-status-card">
-        <div class="top-status-label">Platform</div>
-        <div class="top-status-main">{concurrent_users} users</div>
-        <div class="top-status-sub">License expiry: {license_expiry}</div>
-    </div>
-</div>
-""")
-st.markdown(status_bar, unsafe_allow_html=True)
+card_tsm = (
+    '<div class="top-status-card">'
+    '<div class="top-status-label">TSM</div>'
+    '<div class="top-status-main">'
+    f'<span class="top-status-dot" style="background:{get_color(tsm_status)};"></span>'
+    f'<span>{tsm_status}</span>'
+    '</div>'
+    f'<div class="top-status-sub">Last run: {tsm_last_run}</div>'
+    '</div>'
+)
 
-secondary_items = dedent(f"""
-<div class="secondary-card">
-    <div class="secondary-label">Transact Date</div>
-    <div class="secondary-value">{transact_date}</div>
-</div>
+card_platform = (
+    '<div class="top-status-card">'
+    '<div class="top-status-label">Platform</div>'
+    f'<div class="top-status-main">{concurrent_users} users</div>'
+    f'<div class="top-status-sub">License expiry: {license_expiry}</div>'
+    '</div>'
+)
 
-<div class="secondary-card">
-    <div class="secondary-label">System Date</div>
-    <div class="secondary-value">{system_date}</div>
-</div>
+st.markdown(
+    f'<div class="top-status-bar">{card_jboss}{card_tsm}{card_platform}</div>',
+    unsafe_allow_html=True
+)
 
-<div class="secondary-card">
-    <div class="secondary-label">Difference</div>
-    <div class="secondary-value" style="color:{diff_color};">{diff_text}</div>
-</div>
-""")
+# ── SECONDARY METRICS BAR ───────────────────────────────────────────────────
 
-secondary_bar = dedent(f"""
-<div class="secondary-metrics">
-    {secondary_items}
-</div>
-""")
+card_transact = (
+    '<div class="secondary-card">'
+    '<div class="secondary-label">Transact Date</div>'
+    f'<div class="secondary-value">{transact_date}</div>'
+    '</div>'
+)
 
-st.markdown(secondary_bar, unsafe_allow_html=True)
+card_system = (
+    '<div class="secondary-card">'
+    '<div class="secondary-label">System Date</div>'
+    f'<div class="secondary-value">{system_date}</div>'
+    '</div>'
+)
+
+card_diff = (
+    '<div class="secondary-card">'
+    '<div class="secondary-label">Difference</div>'
+    f'<div class="secondary-value" style="color:{diff_color};">{diff_text}</div>'
+    '</div>'
+)
+
+st.markdown(
+    f'<div class="secondary-metrics">{card_transact}{card_system}{card_diff}</div>',
+    unsafe_allow_html=True
+)
 
 st.subheader("COB Monitor")
 
@@ -704,50 +717,37 @@ elif cob_service_control == "START":
         title_col, tx_col, pct_col = st.columns([4, 1.2, 1])
 
         with title_col:
-            st.markdown(dedent(f"""
-<div class="cob-summary-card">
-    <div class="cob-summary-title">COB Progress</div>
-    <div class="progress-track progress-overall-track">
-        <div class="progress-fill" style="
-            background:#22c55e;
-            width:{min(overall_pct, 100)}%;
-            height:100%;
-        "></div>
-    </div>
-    <div class="cob-summary-subtitle" style="margin-top:10px; margin-bottom:0;">
-        {total_processed} / {total_jobs} jobs completed
-    </div>
-</div>
-"""), unsafe_allow_html=True)
+            st.markdown(
+                '<div class="cob-summary-card">'
+                '<div class="cob-summary-title">COB Progress</div>'
+                '<div class="progress-track progress-overall-track">'
+                f'<div class="progress-fill" style="background:#22c55e;width:{min(overall_pct, 100)}%;height:100%;"></div>'
+                '</div>'
+                f'<div class="cob-summary-subtitle" style="margin-top:10px;margin-bottom:0;">{total_processed} / {total_jobs} jobs completed</div>'
+                '</div>',
+                unsafe_allow_html=True
+            )
 
         with tx_col:
-            st.markdown(dedent(f"""
-<div class="cob-summary-card">
-    <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
-        <div class="cob-big-pct" style="color:#0f172a; margin:0;">
-            {transactions_processed}
-        </div>
-        <span style="font-size:12px; font-weight:600; color:#64748b; white-space:nowrap;">
-            {tx_rate_text}
-        </span>
-    </div>
-    <div class="cob-summary-subtitle" style="margin-top:6px; margin-bottom:0; text-align:center;">
-        Transactions processed
-    </div>
-</div>
-"""), unsafe_allow_html=True)
+            st.markdown(
+                '<div class="cob-summary-card">'
+                '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">'
+                f'<div class="cob-big-pct" style="color:#0f172a;margin:0;">{transactions_processed}</div>'
+                f'<span style="font-size:12px;font-weight:600;color:#64748b;white-space:nowrap;">{tx_rate_text}</span>'
+                '</div>'
+                '<div class="cob-summary-subtitle" style="margin-top:6px;margin-bottom:0;text-align:center;">Transactions processed</div>'
+                '</div>',
+                unsafe_allow_html=True
+            )
 
         with pct_col:
-            st.markdown(dedent(f"""
-<div class="cob-summary-card">
-    <div class="cob-big-pct" style="color:{overall_color};">
-        {overall_pct:.2f}%
-    </div>
-    <div class="cob-summary-subtitle" style="text-align:right; margin-bottom:0;">
-        Overall progress
-    </div>
-</div>
-"""), unsafe_allow_html=True)
+            st.markdown(
+                '<div class="cob-summary-card">'
+                f'<div class="cob-big-pct" style="color:{overall_color};">{overall_pct:.2f}%</div>'
+                '<div class="cob-summary-subtitle" style="text-align:right;margin-bottom:0;">Overall progress</div>'
+                '</div>',
+                unsafe_allow_html=True
+            )
 
         header_cols = st.columns([2.4, 4, 1.2, 1.2, 1.4])
         header_cols[0].markdown('<div class="stage-header">Stage</div>', unsafe_allow_html=True)
@@ -773,45 +773,39 @@ elif cob_service_control == "START":
 
             cols = st.columns([2.4, 4, 1.2, 1.2, 1.4])
 
-            cols[0].markdown(dedent(f"""
-<div class="stage-cell">
-    <div class="stage-name-wrap">
-        <div class="stage-name">{stage}</div>
-        <span class="status-pill {pill_class}">{status}</span>
-    </div>
-</div>
-"""), unsafe_allow_html=True)
+            cols[0].markdown(
+                '<div class="stage-cell">'
+                '<div class="stage-name-wrap">'
+                f'<div class="stage-name">{stage}</div>'
+                f'<span class="status-pill {pill_class}">{status}</span>'
+                '</div>'
+                '</div>',
+                unsafe_allow_html=True
+            )
 
-            progress_html = dedent(f"""
-<div class="stage-cell">
-    <div class="progress-track progress-stage-track">
-        <div class="progress-fill" style="
-            background:{progress_color};
-            width:{min(pct, 100)}%;
-            height:100%;
-        "></div>
-    </div>
-</div>
-""")
-            cols[1].markdown(progress_html, unsafe_allow_html=True)
+            cols[1].markdown(
+                '<div class="stage-cell">'
+                '<div class="progress-track progress-stage-track">'
+                f'<div class="progress-fill" style="background:{progress_color};width:{min(pct, 100)}%;height:100%;"></div>'
+                '</div>'
+                '</div>',
+                unsafe_allow_html=True
+            )
 
-            cols[2].markdown(dedent(f"""
-<div class="stage-cell">
-    <div class="stage-number">{processed}</div>
-</div>
-"""), unsafe_allow_html=True)
+            cols[2].markdown(
+                f'<div class="stage-cell"><div class="stage-number">{processed}</div></div>',
+                unsafe_allow_html=True
+            )
 
-            cols[3].markdown(dedent(f"""
-<div class="stage-cell">
-    <div class="stage-number">{total}</div>
-</div>
-"""), unsafe_allow_html=True)
+            cols[3].markdown(
+                f'<div class="stage-cell"><div class="stage-number">{total}</div></div>',
+                unsafe_allow_html=True
+            )
 
-            cols[4].markdown(dedent(f"""
-<div class="stage-cell">
-    <div class="stage-pct">{pct:.2f}%</div>
-</div>
-"""), unsafe_allow_html=True)
+            cols[4].markdown(
+                f'<div class="stage-cell"><div class="stage-pct">{pct:.2f}%</div></div>',
+                unsafe_allow_html=True
+            )
 
     else:
         st.warning("No COB progress data available.")
