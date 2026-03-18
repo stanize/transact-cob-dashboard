@@ -6,6 +6,9 @@ from datetime import datetime
 from pathlib import Path
 from textwrap import dedent
 from streamlit_autorefresh import st_autorefresh
+import streamlit as st
+import subprocess
+from datetime import datetime
 
 st.set_page_config(
     page_title="Transact Dashboard",
@@ -560,30 +563,74 @@ def run_script_live(script_name):
 
 
 def render_jboss_restart():
-    st.subheader("JBoss Restart")
+    if st.button("Restart JBoss"):
+    run_streaming_command(["bash", "scripts/db_restart_jboss.sh"])
 
-    with st.container(border=True):
-        restart_clicked = st.button(
-            "Restart JBoss",
-            type="primary",
-            key="restart_jboss_btn",
-            disabled=st.session_state.jboss_restart_in_progress
-        )
+#    st.subheader("JBoss Restart")
 
-    if restart_clicked and not st.session_state.jboss_restart_in_progress:
-        st.session_state.jboss_restart_requested = True
-        st.rerun()
+#    with st.container(border=True):
+#        restart_clicked = st.button(
+#            "Restart JBoss",
+#            type="primary",
+#            key="restart_jboss_btn",
+#            disabled=st.session_state.jboss_restart_in_progress
+#        )
 
-    if st.session_state.jboss_restart_requested and not st.session_state.jboss_restart_in_progress:
-        st.session_state.jboss_restart_requested = False
-        st.session_state.jboss_restart_in_progress = True
-        st.rerun()
+#    if restart_clicked and not st.session_state.jboss_restart_in_progress:
+#        st.session_state.jboss_restart_requested = True
+#        st.rerun()
 
-    if st.session_state.jboss_restart_in_progress:
-        st.subheader("JBoss Restart Workflow Log")
-        ok, log_lines = run_script_live("db_restart_jboss.sh")
-        st.session_state.jboss_restart_in_progress = False
-        st.rerun()  # ← forces a clean rerun AFTER completion, preventing replay
+#    if st.session_state.jboss_restart_requested and not st.session_state.jboss_restart_in_progress:
+#        st.session_state.jboss_restart_requested = False
+#        st.session_state.jboss_restart_in_progress = True
+#        st.rerun()
+
+#    if st.session_state.jboss_restart_in_progress:
+#        st.subheader("JBoss Restart Workflow Log")
+#        ok, log_lines = run_script_live("db_restart_jboss.sh")
+#        st.session_state.jboss_restart_in_progress = False
+#        st.rerun()  # ← forces a clean rerun AFTER completion, preventing replay
+    
+if "log_lines" not in st.session_state:
+    st.session_state.log_lines = []
+
+def append_log(message: str, level: str = "INFO"):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    formatted = f"[{timestamp}] [{level}] {message}"
+    st.session_state.log_lines.append(formatted)
+
+#    with open("/tmp/transact_dashboard.log", "a", encoding="utf-8") as f:
+#        f.write(formatted + "\n")
+
+def clear_logs():
+    st.session_state.log_lines = []
+
+def run_streaming_command(command):
+    append_log(f"Running command: {' '.join(command)}")
+
+    process = subprocess.Popen(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1
+    )
+
+    for line in iter(process.stdout.readline, ''):
+        line = line.rstrip()
+        if line:
+            append_log(line)
+
+    process.stdout.close()
+    return_code = process.wait()
+
+    if return_code == 0:
+        append_log(f"Command finished successfully with exit code {return_code}", "SUCCESS")
+    else:
+        append_log(f"Command failed with exit code {return_code}", "ERROR")
+
+    return return_code
+    
 
 
 # ── DATA COLLECTION ──────────────────────────────────────────────────────────
@@ -721,6 +768,29 @@ with tab_cob:
         </p>
     </div>
     """, unsafe_allow_html=True)
+
+# ── LOG EXPLORER ───────────────────────────────────────────────────────────────────
+st.markdown("### Log Explorer")
+
+col1, col2 = st.columns([1, 1])
+
+with col1:
+    if st.button("Clear Logs"):
+        clear_logs()
+        st.rerun()
+
+with col2:
+    st.caption(f"{len(st.session_state.log_lines)} log lines")
+
+log_text = "\n".join(st.session_state.log_lines)
+
+st.text_area(
+    "Execution Output",
+    value=log_text,
+    height=300,
+    key="log_explorer",
+    disabled=True
+)
 # ── FOOTER ───────────────────────────────────────────────────────────────────
 
 st.markdown(dedent("""
