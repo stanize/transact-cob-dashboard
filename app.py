@@ -25,6 +25,53 @@ st.markdown(dedent("""
 }
 
 /* ---------------------------------------------------------
+   TABS
+--------------------------------------------------------- */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 8px;
+    background: transparent;
+    padding: 0;
+    margin-top: 6px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid #dbe3ea;
+}
+
+.stTabs [data-baseweb="tab"] {
+    height: 42px;
+    padding: 0 18px;
+    background: #e2e8f0;
+    border: 1px solid #cbd5e1;
+    border-bottom: none;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    color: #334155;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.stTabs [data-baseweb="tab"]:hover {
+    background: #f8fafc;
+    color: #0f172a;
+}
+
+.stTabs [aria-selected="true"] {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 1px solid #cbd5e1 !important;
+    border-bottom: 1px solid #ffffff !important;
+    box-shadow: 0 -1px 0 #ffffff inset;
+}
+
+.stTabs [data-baseweb="tab-panel"] {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 0 12px 12px 12px;
+    padding: 18px 18px 20px 18px;
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+}
+
+/* ---------------------------------------------------------
    TOP STATUS BAR
 --------------------------------------------------------- */
 .top-status-bar {
@@ -618,8 +665,23 @@ tab_overview, tab_cob = st.tabs(["📋 Overview", "⚙️ COB Monitor"])
 # ── TAB: OVERVIEW ────────────────────────────────────────────────────────────
 
 with tab_overview:
-    st.info("Select the **COB Monitor** tab to manage and track the Close of Business process.")
-
+    st.markdown("""
+    <div style="
+        background:#f8fafc;
+        border:1px solid #e2e8f0;
+        border-radius:12px;
+        padding:18px;
+    ">
+        <div style="font-size:16px;font-weight:700;color:#0f172a;margin-bottom:8px;">
+            Dashboard Overview
+        </div>
+        <div style="font-size:14px;color:#475569;line-height:1.6;">
+            Use the <b>COB Monitor</b> tab to start COB, track execution progress,
+            and monitor stage completion in real time.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
 # ── TAB: COB MONITOR ─────────────────────────────────────────────────────────
 
 with tab_cob:
