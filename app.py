@@ -6,9 +6,6 @@ from datetime import datetime
 from pathlib import Path
 from textwrap import dedent
 from streamlit_autorefresh import st_autorefresh
-import streamlit as st
-import subprocess
-from datetime import datetime
 
 st.set_page_config(
     page_title="Transact Dashboard",
@@ -562,35 +559,6 @@ def run_script_live(script_name):
         return False, [f"ERROR: {str(e)}"]
 
 
-def render_jboss_restart():
-    if st.button("Restart JBoss"):
-    run_streaming_command(["bash", "scripts/db_restart_jboss.sh"])
-
-#    st.subheader("JBoss Restart")
-
-#    with st.container(border=True):
-#        restart_clicked = st.button(
-#            "Restart JBoss",
-#            type="primary",
-#            key="restart_jboss_btn",
-#            disabled=st.session_state.jboss_restart_in_progress
-#        )
-
-#    if restart_clicked and not st.session_state.jboss_restart_in_progress:
-#        st.session_state.jboss_restart_requested = True
-#        st.rerun()
-
-#    if st.session_state.jboss_restart_requested and not st.session_state.jboss_restart_in_progress:
-#        st.session_state.jboss_restart_requested = False
-#        st.session_state.jboss_restart_in_progress = True
-#        st.rerun()
-
-#    if st.session_state.jboss_restart_in_progress:
-#        st.subheader("JBoss Restart Workflow Log")
-#        ok, log_lines = run_script_live("db_restart_jboss.sh")
-#        st.session_state.jboss_restart_in_progress = False
-#        st.rerun()  # ← forces a clean rerun AFTER completion, preventing replay
-    
 if "log_lines" not in st.session_state:
     st.session_state.log_lines = []
 
@@ -599,17 +567,24 @@ def append_log(message: str, level: str = "INFO"):
     formatted = f"[{timestamp}] [{level}] {message}"
     st.session_state.log_lines.append(formatted)
 
-#    with open("/tmp/transact_dashboard.log", "a", encoding="utf-8") as f:
-#        f.write(formatted + "\n")
-
 def clear_logs():
     st.session_state.log_lines = []
 
-def run_streaming_command(command):
-    append_log(f"Running command: {' '.join(command)}")
+def run_streaming_command(script_name):
+    script_path = SCRIPTS_DIR / script_name
+
+    if not script_path.exists():
+        append_log(f"Script not found: {script_path}", "ERROR")
+        return 1
+
+    append_log("=" * 80)
+    append_log(f"Starting: {script_name}")
+    append_log("=" * 80)
+
+    log_placeholder = st.empty()
 
     process = subprocess.Popen(
-        command,
+        ["bash", str(script_path)],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
@@ -620,6 +595,13 @@ def run_streaming_command(command):
         line = line.rstrip()
         if line:
             append_log(line)
+            log_placeholder.text_area(
+                "Execution Output",
+                value="\n".join(st.session_state.log_lines),
+                height=300,
+                key="live_log_explorer",
+                disabled=True
+            )
 
     process.stdout.close()
     return_code = process.wait()
@@ -630,7 +612,10 @@ def run_streaming_command(command):
         append_log(f"Command failed with exit code {return_code}", "ERROR")
 
     return return_code
-    
+
+def render_jboss_restart():
+    if st.button("Restart JBoss", type="primary", key="restart_jboss_btn"):
+        run_streaming_command("db_restart_jboss.sh")    
 
 
 # ── DATA COLLECTION ──────────────────────────────────────────────────────────
@@ -782,11 +767,9 @@ with col1:
 with col2:
     st.caption(f"{len(st.session_state.log_lines)} log lines")
 
-log_text = "\n".join(st.session_state.log_lines)
-
 st.text_area(
     "Execution Output",
-    value=log_text,
+    value="\n".join(st.session_state.log_lines),
     height=300,
     key="log_explorer",
     disabled=True
