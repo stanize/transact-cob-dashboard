@@ -4,6 +4,7 @@ import json
 import time
 from datetime import datetime
 from pathlib import Path
+from textwrap import dedent
 from streamlit_autorefresh import st_autorefresh
 
 st.set_page_config(
@@ -12,7 +13,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.markdown("""
+st.markdown(dedent("""
 <style>
 
 /* ---------------------------------------------------------
@@ -274,7 +275,7 @@ button[kind="primary"]:hover {
 }
 
 </style>
-""", unsafe_allow_html=True)
+"""), unsafe_allow_html=True)
 
 SCRIPTS_DIR = Path(__file__).parent / "scripts"
 
@@ -286,6 +287,7 @@ if "cob_start_requested" not in st.session_state:
 
 if not st.session_state.cob_start_in_progress:
     st_autorefresh(interval=5000, key="refresh")
+
 
 def run_script(script_name, timeout=30):
     script_path = SCRIPTS_DIR / script_name
@@ -504,12 +506,7 @@ def run_script_live(script_name):
         return False, [f"ERROR: {str(e)}"]
 
 
-# ---------------------------------------------------------
-# Secondary Metrics (Date Synchronization Section)
-# ---------------------------------------------------------
-
 system_date = datetime.now().strftime("%Y-%m-%d")
-
 transact_raw = run_script("db_get_transact_date.sh")
 
 try:
@@ -531,7 +528,6 @@ except ValueError:
     diff_text = "ERROR"
     diff_color = "#ff5c5c"
 
-
 cob_progress_data, cob_progress_error = get_cob_progress()
 
 st.title("💳 Transact COB Dashboard")
@@ -544,7 +540,7 @@ tsm_last_run = metric_lookup("TSM Last Run")
 concurrent_users = metric_lookup("Concurrent Users")
 license_expiry = metric_lookup("License Expiry")
 
-status_bar = f"""
+status_bar = dedent(f"""
 <div class="top-status-bar">
     <div class="top-status-card">
         <div class="top-status-label">JBoss</div>
@@ -570,14 +566,10 @@ status_bar = f"""
         <div class="top-status-sub">License expiry: {license_expiry}</div>
     </div>
 </div>
-"""
+""")
 st.markdown(status_bar, unsafe_allow_html=True)
 
-# ---------------------------------------------------------
-# Secondary Metrics Display
-# ---------------------------------------------------------
-
-secondary_items = f"""
+secondary_items = dedent(f"""
 <div class="secondary-card">
     <div class="secondary-label">Transact Date</div>
     <div class="secondary-value">{transact_date}</div>
@@ -592,19 +584,15 @@ secondary_items = f"""
     <div class="secondary-label">Difference</div>
     <div class="secondary-value" style="color:{diff_color};">{diff_text}</div>
 </div>
-"""
+""")
 
-secondary_bar = f"""
+secondary_bar = dedent(f"""
 <div class="secondary-metrics">
     {secondary_items}
 </div>
-"""
+""")
 
 st.markdown(secondary_bar, unsafe_allow_html=True)
-
-# ---------------------------------------------------------
-# COB Progress Display
-# ---------------------------------------------------------
 
 st.subheader("COB Monitor")
 
@@ -642,12 +630,11 @@ if cob_service_control == "STOP":
 
 elif cob_service_control == "START":
 
-    # Transactions per minute metric
     raw_tx = run_script("db_get_cob_transactions.sh")
 
     try:
         current_tx = int(raw_tx)
-    except:
+    except Exception:
         current_tx = 0
 
     now_ts = time.time()
@@ -657,14 +644,12 @@ elif cob_service_control == "START":
 
     st.session_state.tx_history.append((now_ts, current_tx))
 
-    # keep only roughly last 180 seconds
     st.session_state.tx_history = [
         item for item in st.session_state.tx_history
         if now_ts - item[0] <= 180
     ]
 
     transactions_processed = f"{current_tx:,}"
-
     tx_rate_text = "Avg: --/min"
 
     if len(st.session_state.tx_history) >= 2:
@@ -716,60 +701,54 @@ elif cob_service_control == "START":
         else:
             overall_color = "#64748b"
 
-        # ---------------------------------------------------------
-        # Summary card
-        # ---------------------------------------------------------
         title_col, tx_col, pct_col = st.columns([4, 1.2, 1])
 
         with title_col:
-            st.markdown(f"""
-            <div class="cob-summary-card">
-                <div class="cob-summary-title">COB Progress</div>
-                <div class="progress-track progress-overall-track">
-                    <div class="progress-fill" style="
-                        background:#22c55e;
-                        width:{min(overall_pct, 100)}%;
-                        height:100%;
-                    "></div>
-                </div>
-                <div class="cob-summary-subtitle" style="margin-top:10px; margin-bottom:0;">
-                    {total_processed} / {total_jobs} jobs completed
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(dedent(f"""
+<div class="cob-summary-card">
+    <div class="cob-summary-title">COB Progress</div>
+    <div class="progress-track progress-overall-track">
+        <div class="progress-fill" style="
+            background:#22c55e;
+            width:{min(overall_pct, 100)}%;
+            height:100%;
+        "></div>
+    </div>
+    <div class="cob-summary-subtitle" style="margin-top:10px; margin-bottom:0;">
+        {total_processed} / {total_jobs} jobs completed
+    </div>
+</div>
+"""), unsafe_allow_html=True)
 
         with tx_col:
-            st.markdown(f"""
-            <div class="cob-summary-card">
-                <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
-                    <div class="cob-big-pct" style="color:#0f172a; margin:0;">
-                        {transactions_processed}
-                    </div>
-                    <span style="font-size:12px; font-weight:600; color:#64748b; white-space:nowrap;">
-                        {tx_rate_text}
-                    </span>
-                </div>
-                <div class="cob-summary-subtitle" style="margin-top:6px; margin-bottom:0; text-align:center;">
-                    Transactions processed
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(dedent(f"""
+<div class="cob-summary-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+        <div class="cob-big-pct" style="color:#0f172a; margin:0;">
+            {transactions_processed}
+        </div>
+        <span style="font-size:12px; font-weight:600; color:#64748b; white-space:nowrap;">
+            {tx_rate_text}
+        </span>
+    </div>
+    <div class="cob-summary-subtitle" style="margin-top:6px; margin-bottom:0; text-align:center;">
+        Transactions processed
+    </div>
+</div>
+"""), unsafe_allow_html=True)
 
         with pct_col:
-            st.markdown(f"""
-            <div class="cob-summary-card">
-                <div class="cob-big-pct" style="color:{overall_color};">
-                    {overall_pct:.2f}%
-                </div>
-                <div class="cob-summary-subtitle" style="text-align:right; margin-bottom:0;">
-                    Overall progress
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(dedent(f"""
+<div class="cob-summary-card">
+    <div class="cob-big-pct" style="color:{overall_color};">
+        {overall_pct:.2f}%
+    </div>
+    <div class="cob-summary-subtitle" style="text-align:right; margin-bottom:0;">
+        Overall progress
+    </div>
+</div>
+"""), unsafe_allow_html=True)
 
-        # ---------------------------------------------------------
-        # Stage table header
-        # ---------------------------------------------------------
         header_cols = st.columns([2.4, 4, 1.2, 1.2, 1.4])
         header_cols[0].markdown('<div class="stage-header">Stage</div>', unsafe_allow_html=True)
         header_cols[1].markdown('<div class="stage-header">Progress</div>', unsafe_allow_html=True)
@@ -777,9 +756,6 @@ elif cob_service_control == "START":
         header_cols[3].markdown('<div class="stage-header">Total</div>', unsafe_allow_html=True)
         header_cols[4].markdown('<div class="stage-header">% Completed</div>', unsafe_allow_html=True)
 
-        # ---------------------------------------------------------
-        # Stage rows
-        # ---------------------------------------------------------
         for row in stage_rows:
             stage = row.get("stage", "N/A")
             processed = safe_int(row.get("processed", 0))
@@ -797,55 +773,50 @@ elif cob_service_control == "START":
 
             cols = st.columns([2.4, 4, 1.2, 1.2, 1.4])
 
-            cols[0].markdown(f"""
-            <div class="stage-cell">
-                <div class="stage-name-wrap">
-                    <div class="stage-name">{stage}</div>
-                    <span class="status-pill {pill_class}">{status}</span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            cols[0].markdown(dedent(f"""
+<div class="stage-cell">
+    <div class="stage-name-wrap">
+        <div class="stage-name">{stage}</div>
+        <span class="status-pill {pill_class}">{status}</span>
+    </div>
+</div>
+"""), unsafe_allow_html=True)
 
-            progress_html = f"""
-            <div class="stage-cell">
-                <div class="progress-track progress-stage-track">
-                    <div class="progress-fill" style="
-                        background:{progress_color};
-                        width:{min(pct, 100)}%;
-                        height:100%;
-                    "></div>
-                </div>
-            </div>
-            """
+            progress_html = dedent(f"""
+<div class="stage-cell">
+    <div class="progress-track progress-stage-track">
+        <div class="progress-fill" style="
+            background:{progress_color};
+            width:{min(pct, 100)}%;
+            height:100%;
+        "></div>
+    </div>
+</div>
+""")
             cols[1].markdown(progress_html, unsafe_allow_html=True)
 
-            cols[2].markdown(f"""
-            <div class="stage-cell">
-                <div class="stage-number">{processed}</div>
-            </div>
-            """, unsafe_allow_html=True)
+            cols[2].markdown(dedent(f"""
+<div class="stage-cell">
+    <div class="stage-number">{processed}</div>
+</div>
+"""), unsafe_allow_html=True)
 
-            cols[3].markdown(f"""
-            <div class="stage-cell">
-                <div class="stage-number">{total}</div>
-            </div>
-            """, unsafe_allow_html=True)
+            cols[3].markdown(dedent(f"""
+<div class="stage-cell">
+    <div class="stage-number">{total}</div>
+</div>
+"""), unsafe_allow_html=True)
 
-            cols[4].markdown(f"""
-            <div class="stage-cell">
-                <div class="stage-pct">{pct:.2f}%</div>
-            </div>
-            """, unsafe_allow_html=True)
+            cols[4].markdown(dedent(f"""
+<div class="stage-cell">
+    <div class="stage-pct">{pct:.2f}%</div>
+</div>
+"""), unsafe_allow_html=True)
 
     else:
         st.warning("No COB progress data available.")
 
-# ---------------------------------------------------------
-# Credits Section
-# ---------------------------------------------------------
-
-st.markdown(
-"""
+st.markdown(dedent("""
 ---
 <center>
 
@@ -856,6 +827,4 @@ Created by **Ignatius Stanislaus**
 
 🛠️ If it works, it was planned. If it breaks, it's still under development.
 </center>
-""",
-unsafe_allow_html=True
-)
+"""), unsafe_allow_html=True)
