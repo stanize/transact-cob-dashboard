@@ -8,7 +8,7 @@ from textwrap import dedent
 from streamlit_autorefresh import st_autorefresh
 
 st.set_page_config(
-    page_title="Transact COB Dashboard",
+    page_title="Transact Dashboard",
     page_icon="💳",
     layout="wide"
 )
@@ -814,7 +814,7 @@ st.markdown(dedent("""
 ---
 <center>
 
-⚡ **Transact COB Dashboard**
+⚡ **Transact Dashboard**
 
 Powered by **Streamlit • Python • Bash • Coffee • Mild Panic**  
 Created by **Ignatius Stanislaus**
