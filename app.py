@@ -567,29 +567,24 @@ def render_jboss_restart():
             "Restart JBoss",
             type="primary",
             key="restart_jboss_btn",
-            disabled=st.session_state.get("jboss_restart_in_progress", False)
+            disabled=st.session_state.jboss_restart_in_progress
         )
 
-    if restart_clicked:
+    if restart_clicked and not st.session_state.jboss_restart_in_progress:
         st.session_state.jboss_restart_requested = True
         st.rerun()
 
-    if st.session_state.get("jboss_restart_requested", False) and not st.session_state.get("jboss_restart_in_progress", False):
+    if st.session_state.jboss_restart_requested and not st.session_state.jboss_restart_in_progress:
         st.session_state.jboss_restart_requested = False
         st.session_state.jboss_restart_in_progress = True
         st.rerun()
 
-    if st.session_state.get("jboss_restart_in_progress", False):
+    if st.session_state.jboss_restart_in_progress:
         st.subheader("JBoss Restart Workflow Log")
-
         ok, log_lines = run_script_live("db_restart_jboss.sh")
-
         st.session_state.jboss_restart_in_progress = False
+        st.rerun()  # ← forces a clean rerun AFTER completion, preventing replay
 
-        if ok:
-            st.success("JBoss restart completed.")
-        else:
-            st.error("JBoss restart failed.")
 
 # ── DATA COLLECTION ──────────────────────────────────────────────────────────
 
