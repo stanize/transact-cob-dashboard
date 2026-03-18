@@ -660,7 +660,7 @@ st.markdown(
 
 # ── TABS ─────────────────────────────────────────────────────────────────────
 
-tab_overview, tab_cob = st.tabs(["📋 Overview", "⚙️ COB Monitor"])
+tab_overview, tab_cob = st.tabs(["⚙️ Tools", "⚙️ COB Monitor"])
 
 # ── TAB: OVERVIEW ────────────────────────────────────────────────────────────
 
@@ -676,8 +676,7 @@ with tab_overview:
             Dashboard Overview
         </div>
         <div style="font-size:14px;color:#475569;line-height:1.6;">
-            Use the <b>COB Monitor</b> tab to start COB, track execution progress,
-            and monitor stage completion in real time.
+            Tools to restart JBoss, TSM, etc, etc.
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -686,6 +685,42 @@ with tab_overview:
 
 with tab_cob:
 
+    st.markdown("""
+    <div style="
+        background-color: #1e293b;
+        padding: 24px;
+        border-radius: 12px;
+        text-align: center;
+        border: 1px dashed #475569;
+        margin-top: 10px;
+    ">
+        <h3 style="margin-bottom:10px;">🚧 Work in Progress</h3>
+        <p style="color:#94a3b8; margin-bottom:0;">
+            COB execution and monitoring features are currently under development.<br>
+            This section is not available yet.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+# ── FOOTER ───────────────────────────────────────────────────────────────────
+
+st.markdown(dedent("""
+---
+<center>
+
+⚡ **Transact Dashboard**
+
+Powered by **Streamlit • Python • Bash • Coffee • Mild Panic**  
+Created by **Ignatius Stanislaus**
+
+🛠️ If it works, it was planned. If it breaks, it's still under development.
+</center>
+"""), unsafe_allow_html=True)
+
+
+
+# --- CODE TO BE USED IN THE FUTURE -----
+
+def future_cob_tab():
     cob_service_control = run_script("db_get_cob_service_control.sh").strip().upper()
 
     if cob_service_control == "STOP":
@@ -886,18 +921,3 @@ with tab_cob:
 
         else:
             st.warning("No COB progress data available.")
-
-# ── FOOTER ───────────────────────────────────────────────────────────────────
-
-st.markdown(dedent("""
----
-<center>
-
-⚡ **Transact Dashboard**
-
-Powered by **Streamlit • Python • Bash • Coffee • Mild Panic**  
-Created by **Ignatius Stanislaus**
-
-🛠️ If it works, it was planned. If it breaks, it's still under development.
-</center>
-"""), unsafe_allow_html=True)
