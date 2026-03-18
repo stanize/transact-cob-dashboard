@@ -6,6 +6,9 @@ from datetime import datetime
 from pathlib import Path
 from textwrap import dedent
 from streamlit_autorefresh import st_autorefresh
+import uuid
+from pathlib import Path
+import os
 
 st.set_page_config(
     page_title="Transact Dashboard",
@@ -559,13 +562,48 @@ def run_script_live(script_name):
         return False, [f"ERROR: {str(e)}"]
 
 
+LOG_DIR = Path("/tmp/transact_dashboard_logs")
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+LOG_RETENTION_DAYS = 3
+LOG_RETENTION_SECONDS = LOG_RETENTION_DAYS * 24 * 60 * 60
+
+def cleanup_old_logs():
+    now = time.time()
+
+    for log_file in LOG_DIR.glob("session_*.log"):
+        try:
+            file_age = now - log_file.stat().st_mtime
+
+            if file_age > LOG_RETENTION_SECONDS:
+                log_file.unlink()
+        except Exception:
+            pass
+            
+cleanup_old_logs()
+
+
+if "session_id" not in st.session_state:
+    st.session_state.session_id = str(uuid.uuid4())[:8]
+
+SESSION_LOG_FILE = LOG_DIR / f"session_{st.session_state.session_id}.log"
+GLOBAL_LOG_FILE = LOG_DIR / "global_audit.log"
+
 if "log_lines" not in st.session_state:
     st.session_state.log_lines = []
 
 def append_log(message: str, level: str = "INFO"):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     formatted = f"[{timestamp}] [{level}] {message}"
+
     st.session_state.log_lines.append(formatted)
+
+    with open(SESSION_LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(formatted + "\n")
+
+    with open(GLOBAL_LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(f"[session:{st.session_state.session_id}] {formatted}\n")
+
 
 def clear_logs():
     st.session_state.log_lines = []
