@@ -546,7 +546,6 @@ license_expiry = metric_lookup("License Expiry")
 
 status_bar = f"""
 <div class="top-status-bar">
-
     <div class="top-status-card">
         <div class="top-status-label">JBoss</div>
         <div class="top-status-main">
@@ -570,10 +569,8 @@ status_bar = f"""
         <div class="top-status-main">{concurrent_users} users</div>
         <div class="top-status-sub">License expiry: {license_expiry}</div>
     </div>
-
 </div>
 """
-
 st.markdown(status_bar, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
