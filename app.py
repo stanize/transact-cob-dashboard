@@ -582,7 +582,7 @@ cob_progress_data, cob_progress_error = get_cob_progress()
 # ── PAGE HEADER ──────────────────────────────────────────────────────────────
 
 st.title("💳 Transact Dashboard")
-st.caption("Temenos Transact COB Operations Dashboard")
+#st.caption("Temenos Transact COB Operations Dashboard")
 
 # ── METRIC LOOKUPS ───────────────────────────────────────────────────────────
 
