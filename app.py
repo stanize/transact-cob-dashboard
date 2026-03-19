@@ -343,12 +343,6 @@ if "cob_start_requested" not in st.session_state:
 if not st.session_state.cob_start_in_progress:
     st_autorefresh(interval=5000, key="refresh")
 
-if "jboss_restart_requested" not in st.session_state:
-    st.session_state.jboss_restart_requested = False
-
-if "jboss_restart_in_progress" not in st.session_state:
-    st.session_state.jboss_restart_in_progress = False
-
 if "jboss_last_click" not in st.session_state:
     st.session_state.jboss_last_click = 0
 
@@ -671,16 +665,11 @@ def render_jboss_restart():
     else:
         label = "Restart JBoss"
 
+
     if st.button(label, type="primary", key="restart_jboss_btn", disabled=disabled):
         st.session_state.jboss_last_click = time.time()
-        st.session_state.jboss_restart_in_progress = True
-        st.rerun()
-
-    if st.session_state.get("jboss_restart_in_progress", False):
         run_streaming_command("db_restart_jboss.sh")
-        st.session_state.jboss_restart_in_progress = False
         st.rerun()
-
 
 # ── DATA COLLECTION ──────────────────────────────────────────────────────────
 
