@@ -348,7 +348,9 @@ if "jboss_restart_requested" not in st.session_state:
 
 if "jboss_restart_in_progress" not in st.session_state:
     st.session_state.jboss_restart_in_progress = False
-    
+
+if "jboss_last_click" not in st.session_state:
+    st.session_state.jboss_last_click = 0
 
 def run_script(script_name, timeout=30):
     script_path = SCRIPTS_DIR / script_name
@@ -648,10 +650,37 @@ def run_streaming_command(script_name):
     return return_code
     
 
+JBOSS_COOLDOWN_SECONDS = 300  # 5 minutes
+
 def render_jboss_restart():
-    if st.button("Restart JBoss", type="primary", key="restart_jboss_btn"):
+    now = time.time()
+
+    last_click = st.session_state.get("jboss_last_click", 0)
+    elapsed = now - last_click
+    in_cooldown = elapsed < JBOSS_COOLDOWN_SECONDS
+    in_progress = st.session_state.get("jboss_restart_in_progress", False)
+
+    disabled = in_cooldown or in_progress
+
+    if in_progress:
+        label = "⏳ Restarting JBoss..."
+    elif in_cooldown:
+        remaining = int(JBOSS_COOLDOWN_SECONDS - elapsed)
+        mins, secs = divmod(remaining, 60)
+        label = f"⏳ Cooldown: {mins}m {secs:02d}s remaining"
+    else:
+        label = "Restart JBoss"
+
+    if st.button(label, type="primary", key="restart_jboss_btn", disabled=disabled):
+        st.session_state.jboss_last_click = time.time()
+        st.session_state.jboss_restart_in_progress = True
+        st.rerun()
+
+    if st.session_state.get("jboss_restart_in_progress", False):
         run_streaming_command("db_restart_jboss.sh")
-        st.rerun()  # ← forces re-render so Log Explorer shows the final output
+        st.session_state.jboss_restart_in_progress = False
+        st.rerun()
+
 
 # ── DATA COLLECTION ──────────────────────────────────────────────────────────
 
