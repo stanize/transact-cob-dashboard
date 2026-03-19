@@ -332,8 +332,16 @@ button[kind="primary"]:focus-visible {
 </style>
 """), unsafe_allow_html=True)
 
+
+
+# ── Session State Initialisations  ───────────────────────────────────────────────────────────────────
+ 
+
 SCRIPTS_DIR = Path(__file__).parent / "scripts"
 
+if "jboss_run_pending" not in st.session_state:
+    st.session_state.jboss_run_pending = False
+    
 if "cob_start_in_progress" not in st.session_state:
     st.session_state.cob_start_in_progress = False
 
@@ -345,6 +353,10 @@ if not st.session_state.cob_start_in_progress:
 
 if "jboss_last_click" not in st.session_state:
     st.session_state.jboss_last_click = 0
+
+
+
+# ── Python Functions  ───────────────────────────────────────────────────────────────────
 
 def run_script(script_name, timeout=30):
     script_path = SCRIPTS_DIR / script_name
@@ -652,25 +664,24 @@ def render_jboss_restart():
     last_click = st.session_state.get("jboss_last_click", 0)
     elapsed = now - last_click
     in_cooldown = elapsed < JBOSS_COOLDOWN_SECONDS
-    in_progress = st.session_state.get("jboss_restart_in_progress", False)
 
-    disabled = in_cooldown or in_progress
-
-    if in_progress:
-        label = "⏳ Restarting JBoss..."
-    elif in_cooldown:
+    if in_cooldown:
         remaining = int(JBOSS_COOLDOWN_SECONDS - elapsed)
         mins, secs = divmod(remaining, 60)
         label = f"⏳ Cooldown: {mins}m {secs:02d}s remaining"
     else:
         label = "Restart JBoss"
 
-
-    if st.button(label, type="primary", key="restart_jboss_btn", disabled=disabled):
+    if st.button(label, type="primary", key="restart_jboss_btn", disabled=in_cooldown):
         st.session_state.jboss_last_click = time.time()
+        st.session_state.jboss_run_pending = True
+        st.rerun()  # rerun first so button redraws as disabled
+
+    if st.session_state.get("jboss_run_pending", False):
+        st.session_state.jboss_run_pending = False
         run_streaming_command("db_restart_jboss.sh")
         st.rerun()
-
+        
 # ── DATA COLLECTION ──────────────────────────────────────────────────────────
 
 system_date = datetime.now().strftime("%Y-%m-%d")
