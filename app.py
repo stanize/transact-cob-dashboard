@@ -622,7 +622,6 @@ def clear_logs():
     st.session_state.log_lines = []
 
 def run_streaming_command(script_name):
-    
     script_path = SCRIPTS_DIR / script_name
 
     if not script_path.exists():
@@ -630,13 +629,13 @@ def run_streaming_command(script_name):
         return 1
 
     append_log("=" * 80)
-    
+
     process = subprocess.Popen(
         ["bash", str(script_path)],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        bufsize=1
+        bufsize=0  # ← unbuffered, catches all output immediately
     )
 
     for line in iter(process.stdout.readline, ''):
@@ -644,8 +643,8 @@ def run_streaming_command(script_name):
         if line:
             append_log(line)
 
-    process.stdout.close()
-    return_code = process.wait()
+    process.wait()  # ← wait AFTER draining stdout, not before
+    return_code = process.returncode
 
     if return_code == 0:
         append_log(f"Finished successfully (exit code {return_code})", "SUCCESS")
