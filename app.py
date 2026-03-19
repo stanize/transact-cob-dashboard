@@ -619,6 +619,7 @@ def run_streaming_command(script_name):
     append_log(f"Starting: {script_name}")
     append_log("=" * 80)
 
+    # Single placeholder — updated in-place as lines stream in
     log_placeholder = st.empty()
 
     process = subprocess.Popen(
@@ -633,23 +634,22 @@ def run_streaming_command(script_name):
         line = line.rstrip()
         if line:
             append_log(line)
-            log_placeholder.text_area(
-                "Execution Output",
-                value="\n".join(st.session_state.log_lines),
-                height=300,
-                key="live_log_explorer",
-                disabled=True
-            )
+            # Use markdown code block instead of text_area — avoids widget key conflicts
+            log_placeholder.code("\n".join(st.session_state.log_lines), language="bash")
 
     process.stdout.close()
     return_code = process.wait()
 
     if return_code == 0:
-        append_log(f"Command finished successfully with exit code {return_code}", "SUCCESS")
+        append_log(f"Finished successfully (exit code {return_code})", "SUCCESS")
     else:
-        append_log(f"Command failed with exit code {return_code}", "ERROR")
+        append_log(f"Failed with exit code {return_code}", "ERROR")
+
+    # Clear the inline placeholder — the bottom Log Explorer will show the full output
+    log_placeholder.empty()
 
     return return_code
+
 
 def render_jboss_restart():
     if st.button("Restart JBoss", type="primary", key="restart_jboss_btn"):
