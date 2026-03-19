@@ -624,9 +624,6 @@ def run_streaming_command(script_name):
     append_log(f"Starting: {script_name}")
     append_log("=" * 80)
 
-    # Single placeholder — updated in-place as lines stream in
-    log_placeholder = st.empty()
-
     process = subprocess.Popen(
         ["bash", str(script_path)],
         stdout=subprocess.PIPE,
@@ -639,8 +636,6 @@ def run_streaming_command(script_name):
         line = line.rstrip()
         if line:
             append_log(line)
-            # Use markdown code block instead of text_area — avoids widget key conflicts
-            log_placeholder.code("\n".join(st.session_state.log_lines), language="bash")
 
     process.stdout.close()
     return_code = process.wait()
@@ -650,11 +645,8 @@ def run_streaming_command(script_name):
     else:
         append_log(f"Failed with exit code {return_code}", "ERROR")
 
-    # Clear the inline placeholder — the bottom Log Explorer will show the full output
-    # log_placeholder.empty()
-
     return return_code
-
+    
 
 def render_jboss_restart():
     if st.button("Restart JBoss", type="primary", key="restart_jboss_btn"):
@@ -799,25 +791,24 @@ with tab_cob:
 
 # ── LOG EXPLORER ───────────────────────────────────────────────────────────────────
 
+@st.fragment(run_every=1)
+def render_log_explorer():
+    if st.session_state.log_lines:
+        st.code("\n".join(st.session_state.log_lines[-5:]), language="bash")
+    st.text_area(
+        "Execution Output",
+        value="\n".join(st.session_state.log_lines),
+        height=300,
+        key="log_explorer",
+        disabled=True,
+        label_visibility="collapsed"
+    )
+    if st.button("Clear Logs"):
+        clear_logs()
+        st.rerun()
+
 st.markdown("### Log Explorer")
-
-# Always show last 5 lines as a preview
-if st.session_state.log_lines:
-    st.code("\n".join(st.session_state.log_lines[-5:]), language="bash")
-
-# Full scrollable log
-st.text_area(
-    "Execution Output",
-    value="\n".join(st.session_state.log_lines),
-    height=300,
-    key="log_explorer",
-    disabled=True,
-    label_visibility="collapsed"
-)
-
-if st.button("Clear Logs"):
-    clear_logs()
-    st.rerun()
+render_log_explorer()
 
 # ── FOOTER ───────────────────────────────────────────────────────────────────
 
