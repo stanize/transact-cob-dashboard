@@ -622,16 +622,15 @@ def clear_logs():
     st.session_state.log_lines = []
 
 def run_streaming_command(script_name):
+    
     script_path = SCRIPTS_DIR / script_name
 
     if not script_path.exists():
         append_log(f"Script not found: {script_path}", "ERROR")
         return 1
 
-    #append_log("=" * 80)
-    #append_log(f"Starting: {script_name}")
-    #append_log("=" * 80)
-
+    append_log("=" * 80)
+    
     process = subprocess.Popen(
         ["bash", str(script_path)],
         stdout=subprocess.PIPE,
@@ -652,6 +651,8 @@ def run_streaming_command(script_name):
         append_log(f"Finished successfully (exit code {return_code})", "SUCCESS")
     else:
         append_log(f"Failed with exit code {return_code}", "ERROR")
+
+    append_log("=" * 80)
 
     return return_code
     
@@ -679,9 +680,6 @@ def render_jboss_restart():
 
     if st.session_state.get("jboss_run_pending", False):
         st.session_state.jboss_run_pending = False
-        append_log("=" * 80)
-        append_log("ReStarting JBoss" )
-        append_log("=" * 80)
         run_streaming_command("db_restart_jboss.sh")
         st.rerun()
         
