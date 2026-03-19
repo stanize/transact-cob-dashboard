@@ -174,9 +174,14 @@ st.markdown(dedent("""
 button[kind="primary"] {
     background-color: #16a34a !important;
 }
-
 button[kind="primary"]:hover {
     background-color: #15803d !important;
+}
+button[kind="primary"]:focus,
+button[kind="primary"]:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
 }
 
 /* ---------------------------------------------------------
@@ -763,7 +768,7 @@ st.markdown(
 
 # ── TABS ─────────────────────────────────────────────────────────────────────
 
-tab_operations, tab_cob = st.tabs(["Operations", "COB Monitor"])
+tab_operations, tab_cob = st.tabs(["⚡ Operations", "📈 COB Monitor"])
 
 # ── TAB: OVERVIEW ────────────────────────────────────────────────────────────
 
