@@ -628,9 +628,9 @@ def run_streaming_command(script_name):
         append_log(f"Script not found: {script_path}", "ERROR")
         return 1
 
-    append_log("=" * 80)
-    append_log(f"Starting: {script_name}")
-    append_log("=" * 80)
+    #append_log("=" * 80)
+    #append_log(f"Starting: {script_name}")
+    #append_log("=" * 80)
 
     process = subprocess.Popen(
         ["bash", str(script_path)],
@@ -679,6 +679,9 @@ def render_jboss_restart():
 
     if st.session_state.get("jboss_run_pending", False):
         st.session_state.jboss_run_pending = False
+        append_log("=" * 80)
+        append_log("ReStarting JBoss" )
+        append_log("=" * 80)
         run_streaming_command("db_restart_jboss.sh")
         st.rerun()
         
