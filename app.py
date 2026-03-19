@@ -681,6 +681,7 @@ def render_jboss_restart():
     if st.session_state.get("jboss_run_pending", False):
         st.session_state.jboss_run_pending = False
         run_streaming_command("db_restart_jboss.sh")
+        time.sleep(0.5)
         st.rerun()
         
 # ── DATA COLLECTION ──────────────────────────────────────────────────────────
