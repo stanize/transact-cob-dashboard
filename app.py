@@ -802,11 +802,12 @@ if st.session_state.log_lines:
 
 # Full scrollable log
 st.text_area(
-    "",
+    "Execution Output",
     value="\n".join(st.session_state.log_lines),
     height=300,
     key="log_explorer",
-    disabled=True
+    disabled=True,
+    label_visibility="collapsed"
 )
 
 if st.button("Clear Logs"):
