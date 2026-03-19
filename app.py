@@ -792,24 +792,13 @@ with tab_cob:
     </div>
     """, unsafe_allow_html=True)
 
-# ── LOG EXPLORER ───────────────────────────────────────────────────────────────────# ── LOG EXPLORER ─────────────────────────────────────────────────────────────
+# ── LOG EXPLORER ───────────────────────────────────────────────────────────────────
+
 st.markdown("### Log Explorer")
-
-col1, col2 = st.columns([1, 1])
-
-with col1:
-    if st.button("Clear Logs"):
-        clear_logs()
-        st.rerun()
-
-with col2:
-    st.caption(f"{len(st.session_state.log_lines)} log lines")
 
 # Always show last 5 lines as a preview
 if st.session_state.log_lines:
-    last_5 = st.session_state.log_lines[-5:]
-    st.markdown("**Last 5 lines:**")
-    st.code("\n".join(last_5), language="bash")
+    st.code("\n".join(st.session_state.log_lines[-5:]), language="bash")
 
 # Full scrollable log
 st.text_area(
@@ -819,6 +808,11 @@ st.text_area(
     key="log_explorer",
     disabled=True
 )
+
+if st.button("Clear Logs"):
+    clear_logs()
+    st.rerun()
+
 # ── FOOTER ───────────────────────────────────────────────────────────────────
 
 st.markdown(dedent("""
