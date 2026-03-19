@@ -802,7 +802,7 @@ if st.session_state.log_lines:
 
 # Full scrollable log
 st.text_area(
-    "Full Output",
+    "",
     value="\n".join(st.session_state.log_lines),
     height=300,
     key="log_explorer",
