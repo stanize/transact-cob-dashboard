@@ -646,15 +646,15 @@ def run_streaming_command(script_name):
         append_log(f"Failed with exit code {return_code}", "ERROR")
 
     # Clear the inline placeholder — the bottom Log Explorer will show the full output
-    log_placeholder.empty()
+    # log_placeholder.empty()
 
     return return_code
 
 
 def render_jboss_restart():
     if st.button("Restart JBoss", type="primary", key="restart_jboss_btn"):
-        run_streaming_command("db_restart_jboss.sh")    
-
+        run_streaming_command("db_restart_jboss.sh")
+        st.rerun()  # ← forces re-render so Log Explorer shows the final output
 
 # ── DATA COLLECTION ──────────────────────────────────────────────────────────
 
@@ -792,7 +792,7 @@ with tab_cob:
     </div>
     """, unsafe_allow_html=True)
 
-# ── LOG EXPLORER ───────────────────────────────────────────────────────────────────
+# ── LOG EXPLORER ───────────────────────────────────────────────────────────────────# ── LOG EXPLORER ─────────────────────────────────────────────────────────────
 st.markdown("### Log Explorer")
 
 col1, col2 = st.columns([1, 1])
@@ -805,8 +805,15 @@ with col1:
 with col2:
     st.caption(f"{len(st.session_state.log_lines)} log lines")
 
+# Always show last 5 lines as a preview
+if st.session_state.log_lines:
+    last_5 = st.session_state.log_lines[-5:]
+    st.markdown("**Last 5 lines:**")
+    st.code("\n".join(last_5), language="bash")
+
+# Full scrollable log
 st.text_area(
-    "Execution Output",
+    "Full Output",
     value="\n".join(st.session_state.log_lines),
     height=300,
     key="log_explorer",
